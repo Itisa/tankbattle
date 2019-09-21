@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>tank</title>
+
+</head>
+<style type="text/css">
+	#tank{
+		position: absolute;
+		height: 150px;
+		width: 150px;
+		top: 200px;
+		left: 200px;
+		z-index: 1;
+	}
+	#gun{
+		position: absolute;
+		height: 100px;
+		width: 100px;
+		top: 225px;
+		left: 226px;
+		z-index: 2;
+	}
+	#bullet{
+		position: absolute;
+		height: 50px;
+		width: 50px;
+		top: 225px;
+		left: 226px;
+		z-index: 10;
+	}
+	#main{
+		background: #dedede;
+		z-index: -1;
+	}
+</style>
+<body onkeydown="presskey(event)">
+
+<!-- <canvas id="tank"></canvas> -->
+<!-- <canvas id="gun"></canvas> -->
+<!-- <canvas id="bullet"></canvas> -->
+
+<canvas id="main" width="1425" height="700"></canvas>
+
+<script type="text/javascript">
+	var sett,x=110,y=100,fly=0,bx,by,i=0
+	var jx=0,jy=0 //jia1 su4 du4
+
+	var canvas = document.getElementById('main');
+		// canvas.width = "712px";
+		// canvas.height = "350px";
+		var c = canvas.getContext("2d");
+		adjustCanvas(canvas,c)
+	function draw_all() {
+
+		var canvas = document.getElementById('main');
+		// canvas.width = "712px";
+		// canvas.height = "350px";
+		var c = canvas.getContext("2d");
+
+		function draw_tank() {
+			c.beginPath();
+			var cos = 1
+			// var sin = Math.sin(45*Math.PI/180)
+			// var cos = Math.cos(45*Math.PI/180)
+			// console.log(sin,cos)
+
+			c.moveTo(100*cos,40);
+			c.lineTo(100*cos,110);
+			c.lineTo(200,110*cos);
+			c.lineTo(200,40*cos);
+			c.translate(100,40)
+			c.rotate(30*Math.PI/180);
+			/////////////////////////
+			// c.beginPath()
+			// c.moveTo(x,y)
+			// c.lineTo(x,y+15)
+			// c.lineTo(x+10,y+15)
+			// c.lineTo(x+10,y)
+			// c.closePath()
+			/////////////////////////
+
+			// c.moveTo(100*cos,40*cos);
+			// c.lineTo(100*cos,110*cos);
+			// c.lineTo(200*cos,110*cos);
+			// c.lineTo(200*cos,40*cos);
+			///
+			// c.moveTo(100,40);
+			// c.lineTo(100,110);
+			// c.lineTo(200,110);
+			// c.lineTo(200,40);
+			c.closePath()
+			c.lineWidth = 5;
+			c.strokeStyle = "red";
+			// c.strokeRect(x, y, width, height)
+			// c.fillRect(100,40,100,70)
+			// c.clearRect(110,45,80,60)
+			c.stroke();
+		}
+		draw_tank()
+		// c.lineTo(150,120)
+		c.rotate(30*Math.PI/180);
+		c.fillRect(10,10,20,20)
+		c.strokeStyle = 'black'
+		c.lineWidth = 2
+
+		c.stroke()
+	}
+	
+	function draw_gun() {
+		var can = document.getElementById('gun');
+		var c = can.getContext("2d");
+		// c.transform(1,1,1,1,1,1)
+		c.fillRect(107,50,80,50);
+		c.fillRect(144,20,10,30);
+		c.stroke();
+	}
+	function draw_bullet() {
+		var can = document.getElementById('bullet');
+		var c = can.getContext("2d");
+		c.fillRect(100,50,20,50);
+		c.stroke();
+		can.style.left = 57+x+"px";
+		can.style.top = y+"px";
+		bx = 57+x
+		by = y
+		fly = 1
+	}
+	function draw_wall() {
+		var px=100,py=100,len=200
+
+	}
+	
+	function init() {
+		sett = setInterval(time,50)
+
+	}
+	function time() {
+		// draw_all()
+		// i+=0.01
+		if (fly==1) {
+			by -= 20
+			document.getElementById('bullet').style.left = bx+"px";
+			document.getElementById('bullet').style.top = by+"px";
+			if (by<0) {fly = 0;document.getElementById('bullet').getContext("2d").clearRect(0,0,200,200)}
+		}
+		if (jx>5) {jx = 5}
+		if (jy>5) {jy = 5}
+		if (jx<-5) {jx = -5}
+		if (jy<-5) {jy = -5}
+		
+		x += jx*2;
+		y += jy*2;
+		if (jx>0) {jx -= 0.25}
+		if (jx<0) {jx += 0.25}
+		if (jy>0) {jy -= 0.25}
+		if (jy<0) {jy += 0.25}
+		document.getElementById('tank').style.left = x+"px";
+		document.getElementById('tank').style.top = y+"px";
+		document.getElementById('gun').style.left = 26+x+"px";
+		document.getElementById('gun').style.top = 25+y+"px";
+
+	}
+
+	function presskey(ev) {
+		var c = ev.keyCode,speed=2;
+		console.log(ev,c,x,y);
+		switch(c){
+		case 38:
+		case 87:
+			console.log("in");
+			jy -= speed;
+			break;
+		case 83:
+		case 40:
+			console.log("in");
+			jy += speed;
+			break;
+		case 39:
+		case 68:
+			jx += speed;
+			break;
+		case 37:
+		case 65:
+			jx -= speed;
+			break;
+		case 70:
+			if (fly==0){draw_bullet()}
+		}
+
+
+
+	}
+	function getPixelRatio(context) {
+    // 获取 canvas 的 backingStorePixelRatio 值
+    var backingStore = context.backingStorePixelRatio ||
+        context.webkitBackingStorePixelRatio ||
+        context.mozBackingStorePixelRatio ||
+        context.msBackingStorePixelRatio ||
+        context.oBackingStorePixelRatio ||
+        context.backingStorePixelRatio || 1;
+    // 若 devicePixelRatio 不存在，默认为 1
+    return (window.devicePixelRatio || 1) / backingStore;
+}
+
+	function adjustCanvas(canvas, context) {
+	    var ratio = getPixelRatio(context);
+	    // 获取 canvas 的原始大小
+	    var oldWidth = canvas.width;
+	    var oldHeight = canvas.height;
+	    // 按照比例放大 canvas
+	    console.log(oldHeight,oldWidth)
+	    canvas.width = oldWidth * ratio;
+	    canvas.height = oldHeight * ratio;
+	    // 用 css 将 canvas 再调整成原来大小
+	    canvas.style.width = oldWidth + 'px';
+	    canvas.style.height = oldHeight + 'px';
+	    // 按照比率把 context 再缩放回来
+	    context.scale(ratio, ratio);
+	}
+
+
+	draw_all()
+
+
+</script>
+</body>
+
+</html>

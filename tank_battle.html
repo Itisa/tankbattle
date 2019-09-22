@@ -43,89 +43,89 @@
 <canvas id="main" width="1425" height="700"></canvas>
 
 <script type="text/javascript">
-	var sett,x=110,y=100,fly=0,bx,by,i=0
+	var sett,x=200,y=200,fly=0,bx,by,i=0,facing=0,sin=1,cos=1,f=0.25
 	var jx=0,jy=0 //jia1 su4 du4
+	var all_tanks = [[200,200,0]]
 
 	var canvas = document.getElementById('main');
-		// canvas.width = "712px";
-		// canvas.height = "350px";
 		var c = canvas.getContext("2d");
 		adjustCanvas(canvas,c)
+	
+	for (var i = all_tanks.length-1; i >= 0; i--) {
+		var tan = all_tanks[i]
+		console.log(tan)
+		draw_all(tan[0],tan[1],tan[2])
+	}
 	function draw_all() {
 
 		var canvas = document.getElementById('main');
-		// canvas.width = "712px";
-		// canvas.height = "350px";
 		var c = canvas.getContext("2d");
+		c.clearRect(0,0,1425,1000)
 
-		function draw_tank() {
+		function draw_tank(x,y,facing) {
 			c.beginPath();
-			var cos = 1
-			// var sin = Math.sin(45*Math.PI/180)
-			// var cos = Math.cos(45*Math.PI/180)
-			// console.log(sin,cos)
+			// var cos = 1
+			sin = Math.sin(facing*Math.PI/180);
+			cos = Math.cos(facing*Math.PI/180);
+			// var sin = Math.sin(facing*Math.PI/180)
+			// var cos = Math.cos(facing*Math.PI/180)
+			c.translate(x,y);
 
-			c.moveTo(100*cos,40);
-			c.lineTo(100*cos,110);
-			c.lineTo(200,110*cos);
-			c.lineTo(200,40*cos);
-			c.translate(100,40)
-			c.rotate(30*Math.PI/180);
-			/////////////////////////
-			// c.beginPath()
-			// c.moveTo(x,y)
-			// c.lineTo(x,y+15)
-			// c.lineTo(x+10,y+15)
-			// c.lineTo(x+10,y)
-			// c.closePath()
-			/////////////////////////
+			c.moveTo(-20*cos+25*sin,-20*sin-25*cos);
+			c.lineTo(-20*cos-25*sin,-20*sin+25*cos);
+			c.lineTo(20*cos-25*sin,20*sin+25*cos);
+			c.lineTo(20*cos+25*sin,20*sin-25*cos);
 
-			// c.moveTo(100*cos,40*cos);
-			// c.lineTo(100*cos,110*cos);
-			// c.lineTo(200*cos,110*cos);
-			// c.lineTo(200*cos,40*cos);
-			///
-			// c.moveTo(100,40);
-			// c.lineTo(100,110);
-			// c.lineTo(200,110);
-			// c.lineTo(200,40);
-			c.closePath()
+			c.closePath();
 			c.lineWidth = 5;
 			c.strokeStyle = "red";
-			// c.strokeRect(x, y, width, height)
-			// c.fillRect(100,40,100,70)
-			// c.clearRect(110,45,80,60)
 			c.stroke();
-		}
-		draw_tank()
-		// c.lineTo(150,120)
-		c.rotate(30*Math.PI/180);
-		c.fillRect(10,10,20,20)
-		c.strokeStyle = 'black'
-		c.lineWidth = 2
+			// c.fillRect(-10,-15,20,20)
+			
+			c.beginPath();
+			c.moveTo(-10*cos+15*sin,-10*sin-15*cos);
+			c.lineTo(-10*cos-5*sin,-10*sin+5*cos);
+			c.lineTo(10*cos-5*sin,10*sin+5*cos);
+			c.lineTo(10*cos+15*sin,10*sin-15*cos);
+			c.closePath();
+			c.strokeStyle = 'black';
+			c.lineWidth = 2;
+			c.stroke();
 
-		c.stroke()
+			c.beginPath();
+			// c.moveTo(0*cos+5*sin,0*sin-5*cos)
+			// c.lineTo(0*cos+30*sin,0*sin-30*cos)
+			c.moveTo(5*sin,-5*cos);
+			c.lineTo(30*sin,-30*cos);
+			c.closePath();
+			c.strokeStyle = 'black';
+			c.lineWidth = 2;
+			c.stroke();
+			c.translate(-x,-y);
+		}
+		// draw_tank(x,y,facing)
+		
 	}
 	
-	function draw_gun() {
-		var can = document.getElementById('gun');
-		var c = can.getContext("2d");
-		// c.transform(1,1,1,1,1,1)
-		c.fillRect(107,50,80,50);
-		c.fillRect(144,20,10,30);
-		c.stroke();
-	}
-	function draw_bullet() {
-		var can = document.getElementById('bullet');
-		var c = can.getContext("2d");
-		c.fillRect(100,50,20,50);
-		c.stroke();
-		can.style.left = 57+x+"px";
-		can.style.top = y+"px";
-		bx = 57+x
-		by = y
-		fly = 1
-	}
+	// function draw_gun() {
+	// 	var can = document.getElementById('gun');
+	// 	var c = can.getContext("2d");
+	// 	// c.transform(1,1,1,1,1,1)
+	// 	c.fillRect(107,50,80,50);
+	// 	c.fillRect(144,20,10,30);
+	// 	c.stroke();
+	// }
+	// function draw_bullet() {
+	// 	var can = document.getElementById('bullet');
+	// 	var c = can.getContext("2d");
+	// 	c.fillRect(100,50,20,50);
+	// 	c.stroke();
+	// 	can.style.left = 57+x+"px";
+	// 	can.style.top = y+"px";
+	// 	bx = 57+x
+	// 	by = y
+	// 	fly = 1
+	// }
 	function draw_wall() {
 		var px=100,py=100,len=200
 
@@ -136,13 +136,12 @@
 
 	}
 	function time() {
-		// draw_all()
-		// i+=0.01
+		draw_all()
 		if (fly==1) {
 			by -= 20
-			document.getElementById('bullet').style.left = bx+"px";
-			document.getElementById('bullet').style.top = by+"px";
-			if (by<0) {fly = 0;document.getElementById('bullet').getContext("2d").clearRect(0,0,200,200)}
+			// document.getElementById('bullet').style.left = bx+"px";
+			// document.getElementById('bullet').style.top = by+"px";
+			// if (by<0) {fly = 0;document.getElementById('bullet').getContext("2d").clearRect(0,0,200,200)}
 		}
 		if (jx>5) {jx = 5}
 		if (jy>5) {jy = 5}
@@ -151,38 +150,42 @@
 		
 		x += jx*2;
 		y += jy*2;
-		if (jx>0) {jx -= 0.25}
-		if (jx<0) {jx += 0.25}
-		if (jy>0) {jy -= 0.25}
-		if (jy<0) {jy += 0.25}
-		document.getElementById('tank').style.left = x+"px";
-		document.getElementById('tank').style.top = y+"px";
-		document.getElementById('gun').style.left = 26+x+"px";
-		document.getElementById('gun').style.top = 25+y+"px";
+		if (jx>0) {jx -= f}
+		if (jx<0) {jx += f}
+		if (jy>0) {jy -= f}
+		if (jy<0) {jy += f}
+		if (Math.abs(jx)<=f) {jx=0}
+		if (Math.abs(jy)<=f) {jy=0}
+		// document.getElementById('tank').style.left = x+"px";
+		// document.getElementById('tank').style.top = y+"px";
+		// document.getElementById('gun').style.left = 26+x+"px";
+		// document.getElementById('gun').style.top = 25+y+"px";
 
 	}
 
 	function presskey(ev) {
 		var c = ev.keyCode,speed=2;
-		console.log(ev,c,x,y);
+		console.log(ev,c,x,y,jx,jy,'f',facing,sin,cos);
 		switch(c){
 		case 38:
-		case 87:
+		case 87://w
 			console.log("in");
-			jy -= speed;
+			jy -= speed*cos;
+			jx += speed*sin;
 			break;
-		case 83:
+		case 83://s
 		case 40:
 			console.log("in");
-			jy += speed;
+			jy += speed*cos;
+			jx -= speed*sin;
 			break;
 		case 39:
-		case 68:
-			jx += speed;
+		case 68://d
+			facing += 5;
 			break;
 		case 37:
-		case 65:
-			jx -= speed;
+		case 65://a
+			facing -= 5;
 			break;
 		case 70:
 			if (fly==0){draw_bullet()}
@@ -221,6 +224,7 @@
 
 
 	draw_all()
+	init()
 
 
 </script>

@@ -1,7 +1,10 @@
-function Tank() {
-	this.x = 600;
-	this.y = 200;
-	this.facing = 0;
+function Tank(userid,username,x,y,facing,team) {
+	//username,x,y,facing,team
+	this.userid = userid;
+	this.username = username;
+	this.x = x;
+	this.y = y;
+	this.facing = facing;
 	this.sin = Math.sin(this.facing*Math.PI/180);
 	this.cos = Math.cos(this.facing*Math.PI/180);
 	this.jx = 0;
@@ -10,13 +13,21 @@ function Tank() {
 	this.bullets = 0;
 	this.health = 10;
 	this.bu_cd = 0;
+	this.delete = false;
+	this.team = team;
 }
-
 
 var psm = Tank.prototype;
 
-psm.hitted = function() {
+psm.hitted = function(firer) {
 	this.health -= 1
+	console.log(this.health)
+	if (this.health==0){
+		this.delete = true;
+
+		text.push([firer.username,firer.team,this.username,this.team,100])
+		// console.log(text)
+	}
 }
 
 psm.move = function() {
@@ -37,7 +48,7 @@ psm.move = function() {
 }
 
 psm.fire = function() {
-	var bu = new Bullet(this.x, this.y, this.facing, this);
+	var bu = new Bullet(this.x, this.y, this.facing, this,this.team);
 	b.push(bu);
 }
 psm.turn = function() {

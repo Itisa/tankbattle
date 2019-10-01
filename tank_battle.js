@@ -1,15 +1,18 @@
 var sett,f=0.25,size=1,speed=10
 var jx=0,jy=0 //jia1 su4 du4
 var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0
-var p = new Tank()
-var p1 = new Tank()
-map1 = [[1,100,100,10,200],[1,600,50,200,10]]
-
-var p_all=[p,p1],b = []
+//userid,username,x,y,facing,team
+var p = new Tank(1,'321',200,100,130,'red')
+var p1 = new Tank(2,'2345',1200,200,0,'blue')
+map1 = [[1,100,100,10,200],[1,600,50,200,10],[1,300,300,10,200],[1,450,200,10,200]]
+var bx = new Bullet(0,0,0,0,0,true)
+var p_all=[p,p1],b = [bx]
+var text = [['hello','blue','hi','red',100]];
 //x,y,facing,jx,jy
 
 var canvas = document.getElementById('main');
 var c = canvas.getContext("2d");
+
 adjustCanvas(canvas,c)
 
 function clean_board() {
@@ -26,6 +29,7 @@ function init() {
 function draw_map() {
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
+	c.fillStyle = 'black'
 	for (var i = 0; i < map1.length; i++) {
 		var wall = map1[i];
 		// c.beginPath();
@@ -40,7 +44,7 @@ function draw_map() {
 	}
 }
 
-function draw_tank(x,y,facing,health,bu_cd) {
+function draw_tank(x,y,facing,health,bu_cd,team) {
 	// console.log('draw',x,y,facing)
 	c.beginPath();
 	var sin = Math.sin(facing*Math.PI/180);
@@ -55,7 +59,7 @@ function draw_tank(x,y,facing,health,bu_cd) {
 	c.lineTo((20*cos+25*sin)*size,(20*sin-25*cos)*size);
 	c.closePath();
 	c.lineWidth = 5*size;
-	c.strokeStyle = "blue";
+	c.strokeStyle = team;
 	c.stroke();
 	// c.fillRect(-10,-15,20,20)
 	
@@ -97,52 +101,98 @@ function draw_tank(x,y,facing,health,bu_cd) {
 	c.moveTo((-15*cos-18*sin)*size,(-15*sin+18*cos)*size);
 	c.lineTo((cd_b*cos-18*sin)*size,(cd_b*sin+18*cos)*size);
 	c.closePath();
-	c.strokeStyle = '#000';
+	c.strokeStyle = 'black';
 	c.lineWidth = 5*size;
 	c.stroke()
 
 	c.translate(-x,-y);
 }
 
-function draw_bullet(x,y,sin,cos,lent) {
+function draw_bullet(x,y,sin,cos,lent,team) {
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
 	c.translate(x,y);
 	c.beginPath();
 	// c.moveTo((5*sin)*size,(-5*cos)*size);
 	// c.lineTo((30*sin)*size,(-30*cos)*size);
-	c.moveTo((-5*sin)*size,(5*cos)*size);
-	c.lineTo((lent*sin)*size,(-lent*cos)*size);
-	c.closePath();
-	c.strokeStyle = '#ffff';
+	// c.moveTo((-5*sin)*size,(5*cos)*size);
+	// c.lineTo((lent*sin)*size,(-lent*cos)*size);
+	c.moveTo(0,0);
+	c.lineTo((-lent*sin)*size,(lent*cos)*size);
+	// c.closePath();
+	c.strokeStyle = team;
 	c.lineWidth = 5*size;
 	c.stroke();
 	c.translate(-x,-y);
 }
-// function draw_wall() {
-// 	var px=100,py=100,len=200;
 
-// }
+function draw_text() {
+	var can = document.getElementById('main');
+	var c = can.getContext("2d");
+	c.font = "20px bold 黑体";
+	c.fillStyle = "#ff0";
+	
+	// c.textBaseline = "left";
+	for (var i = 0; i < text.length; i++) {
+		text[i][4] -= 1;
+		if (text[i][4]==0) {
+			text.splice(i,1);
+			continue;
+		}
+		var tt = text[i];
+		// var x = 1425-(tt[0].length+tt[2].length+10)*10;
+		// console.log(tt[0].length,tt[2].length)
+		// console.log(tt,x)
+		c.textAlign = "right";
+		c.fillStyle = tt[1];
+		c.fillText(tt[0],1290,200+20*i);
+		// x += (tt[0].length+2)*10
+		c.textAlign = "left";
+		c.fillStyle = 'black';
+		c.fillText('kills',1300,200+20*i)
+		// x += (tt[2].length+2)*10
+		c.textAlign = "left";
+		c.fillStyle = tt[3];
+		c.fillText(tt[2],1350,200+20*i);
+		// c.fillText(text[i][0],text[i][1],text[i][2]);
+
+	}
+}
 
 function time() {
+
 	clean_board()
+
 	draw_map()
+	draw_text()
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i]
 
+		if (pp.delete==true) {continue;}
 		if (i==1){
-			draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd);
+			draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
 			continue
 		}
+
 
 		if (pp.bu_cd>0) {pp.bu_cd-=1}
 		// console.log(p_all,pp.x)
 		if (if_f==1) {
-			if (pp.bu_cd==0) {pp.fire();pp.bu_cd=10}
+			if (pp.bu_cd==0) {pp.fire();pp.bu_cd=0}
 		}
 		if (!(if_d&&if_a)) {
-			if (if_d==1) {pp.facing+=5;pp.turn()}
-			if (if_a==1) {pp.facing-=5;pp.turn()}
+			if (if_d==1) {pp.facing+=10;pp.turn()}
+			if (if_a==1) {pp.facing-=10;pp.turn()}
+			// if (if_d==1) {
+			// 	if (if_s==1){pp.facing-=10;}
+			// 	else {pp.facing+=10;}
+			// 	pp.turn();
+			// 	}
+			// if (if_a==1) {
+			// 	if (if_s==1){pp.facing+=10;}
+			// 	else {pp.facing-=10;}
+			// 	pp.turn();
+			// }
 		}
 		if (!(if_w&&if_s)) {
 			// if (if_w) {pp.jx += 1*pp.sin;pp.jy -= 1*pp.cos}
@@ -152,15 +202,17 @@ function time() {
 			if (if_s==1) {pp.x-=speed*pp.sin;pp.y+=speed*pp.cos}
 		}
 		// pp.move();
-		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd)
+		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team)
 	}
 
-	for (var i = 0; i < b.length; i++) {
+	for (var i = b.length - 1; i >= 0; i--) {
 		var bb = b[i];
 		if (bb.delete==false) {
 			bb.move();
-			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent)
-		} 
+			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent, bb.team);
+		}else{
+			b.splice(i,1)
+		}
 	}
 
 }

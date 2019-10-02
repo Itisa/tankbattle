@@ -12,7 +12,6 @@ var text = [['hello','blue','hi','red',100]];
 
 var thisuserid = Math.floor(Math.random()*100000);
 
-var mdict = {'pkey':'pk:10','cmd':'init_user','userkey':thisuserid+''};
 
 
 function pack(cmd,data) {
@@ -22,15 +21,15 @@ function pack(cmd,data) {
 	act['cmd'] = cmd;
 	var ss = JSON.stringify(act);
 	postdict['action'] = ss;
-	return postdict
-
+	return postdict;
 }
 
 
 function init() {
-	if (if_begin==false) {sett = setInterval(time,50);if_begin=true;}
-	
-
+	if (if_begin==false) {
+		sett = setInterval(time,50);
+		if_begin=true;
+	}
 }
 
 function post_userinfo() {
@@ -61,18 +60,14 @@ function wait() {
 	c.fillText('username:'+username,10,20)
 	c.fillText('userid:'+userid,10,40)
 	c.stroke()
-	init()
+	// init()
 }
-
 
 function clean_board() {
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
 	c.clearRect(0,0,1425,1000)
 }
-
-
-
 
 function draw_map() {
 	var canvas = document.getElementById('main');
@@ -182,7 +177,6 @@ function draw_text() {
 	c.font = "20px bold 黑体";
 	c.fillStyle = "#ff0";
 	
-	// c.textBaseline = "left";
 	for (var i = 0; i < text.length; i++) {
 		text[i][4] -= 1;
 		if (text[i][4]==0) {
@@ -190,9 +184,6 @@ function draw_text() {
 			continue;
 		}
 		var tt = text[i];
-		// var x = 1425-(tt[0].length+tt[2].length+10)*10;
-		// console.log(tt[0].length,tt[2].length)
-		// console.log(tt,x)
 		c.textAlign = "right";
 		c.fillStyle = tt[1];
 		c.fillText(tt[0],1290,200+20*i);
@@ -212,15 +203,9 @@ function draw_text() {
 function time() {
 	// gt+=1;
 	clean_board()
-	console.log(b)
+	// console.log(p_all)
 	draw_map()
 	draw_text()
-
-	// if (pp.delete==true) {continue;}
-	// if (i==1){
-	// 	draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
-	// 	continue
-	// }
 
 	// console.log(mt,'mt')
 	if (mt.bu_cd>0) {mt.bu_cd-=1}
@@ -246,11 +231,15 @@ function time() {
 		// }
 	}
 	if (!(if_w&&if_s)) {
-		// if (if_w) {pp.jx += 1*pp.sin;pp.jy -= 1*pp.cos}
 		
-		// console.log(pp.jx,pp.jy)
-		if (if_w==1) {mt.x+=speed*mt.sin;mt.y-=speed*mt.cos}
-		if (if_s==1) {mt.x-=speed*mt.sin;mt.y+=speed*mt.cos}
+		if (if_w==1) {
+			mt.x+=speed*mt.sin;
+			mt.y-=speed*mt.cos;
+		}
+		if (if_s==1) {
+			mt.x-=speed*mt.sin;
+			mt.y+=speed*mt.cos;
+		}
 	}
 	if (gt%20==0) {
 		var postdict = pack('move_tank',mt);
@@ -260,26 +249,23 @@ function time() {
 
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i];
-		// console.log('draw_tank','#####',i)
 		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
 	}
 	
 	for (var i = b.length - 1; i >= 0; i--) {
 		var bb = b[i];
 		// if (bb.stop==true) {continue;}
-		if (bb.delete==false) {
+		if (bb.dead==false) {
 			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent, bb.team);
 			bb.move();
 		}else{
-			// console.log(bb,i)
 			b.splice(i,1)
 		}
 	}
 }
 
 function presskey(ev) {
-	var c = ev.keyCode//,speed=2;
-	// console.log(ev,'down')
+	var c = ev.keyCode;
 	switch(c){
 	case 38:
 	case 87://w
@@ -300,14 +286,11 @@ function presskey(ev) {
 	case 70:
 	case 13:
 		if_f = 1
-		// all_bullets.push([100,100,0,1])
 		break;
 	}
-	// all_bullets.push([all_tanks[0][0],all_tanks[0][1],sin,cos]);
 }
 function keyup(ev) {
 	var c = ev.keyCode
-	// console.log(ev);
 	switch(c){
 	case 38:
 	case 87://w
@@ -364,4 +347,3 @@ function adjustCanvas(canvas, context) {
 
 wait()
 init()
-

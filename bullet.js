@@ -9,7 +9,7 @@ function Bullet(firer,x,y,facing,stop=false) {
 	this.x = x+55*this.sin*size;
 	this.y = y-55*this.cos*size;
 	this.lent = 30;
-	this.delete = false;
+	this.dead = false;
 	this.stop = stop;
 }
 
@@ -21,12 +21,12 @@ psm.move = function() {
 		this.x += this.speed*this.sin;
 		this.y -= this.speed*this.cos;
 		// this.speed -= 0.5
-		if (this.speed<=0) {this.delete=true}
+		if (this.speed<=0) {this.dead=true}
 		var x=this.x, y = this.y;
-		if (x>1400) {this.delete=true}
-		if (x<0) {this.delete=true}
-		if (y>700) {this.delete=true}
-		if (y<0) {this.delete=true}
+		if (x>1400) {this.dead=true}
+		else if (x<0) {this.dead=true}
+		if (y>700) {this.dead=true}
+		else if (y<0) {this.dead=true}
 		// console.log(this)
 		this.if_impact()
 	}
@@ -46,7 +46,7 @@ psm.if_impact = function() {
 			if (ty-15<y+20&&ty+15>y-20) {
 			// c.fillRect(this.x-5,this.y-5,10,10);
 			if (pp.team==this.team) {continue;}
-			if (pp.delete==false) {pp.hitted(this.firer);this.delete = true;}
+			if (pp.dead==false) {pp.hitted(this.firer);this.dead = true;}
 			
 			// this.stop=true;
 			}

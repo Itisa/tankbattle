@@ -10,14 +10,80 @@
 		background: #dedede;
 		z-index: -1;
 	}
+	#get_username{
+		position: absolute;
+		z-index: 1;
+		top: 280px;
+		left: 600px;
+		height: 20px;
+		width: 200px;
+		font-size: 14px;
+		border-radius: 10px;
+		border: 1px solid #d0d6da;
+		font-family: inherit;
+		padding: 6px;
+	}
+	#text{
+		position: absolute;
+		z-index: 1;
+		top: 230px;
+		left: 600px;
+	}
+	#password{
+		position: absolute;
+		z-index: 1;
+		top: 350px;
+		left: 600px;
+		height: 20px;
+		width: 200px;
+		font-size: 14px;
+		border-radius: 10px;
+		border: 1px solid #d0d6da;
+		font-family: inherit;
+		padding: 6px;
+	}
+	#password_text{
+		position: absolute;
+		z-index: 1;
+
+		top: 310px;
+		left: 600px;
+	}
+	#forget{
+		position: absolute;
+		z-index: 1;
+		font-size: 14px;
+		top: 330px;
+		left: 760px;
+	}
+	#sign_in{
+		position: absolute;
+		z-index: 1;
+		top: 400px;
+		left: 600px;
+		width: 215px;
+		height: 40px;
+		background: #28a745;
+		font-size: 20px;
+		border: 2px;
+		border-radius: 10px;
+	}
 </style>
 <body onkeydown="presskey(event)" onkeyup="keyup(event)">
+<!-- <button onclick="init()">begin</button> -->
+<input id="get_username" type="text" checked="true"></input>
+<input id="password" type="password"></input>
+<p id="text">Your name?</p>
+<p id="password_text">Your password?</p>
+<a href="http://www.101weiqi.com" id="forget">forget?</a>
 
-<canvas id="main" width="1425" height="700"></canvas>
+<button id="sign_in" onclick="post_userinfo()">sign in</button>
+
+<canvas id="main" width="1425" height="680"></canvas>
 <script type="text/javascript" src="bullet.js"></script>
 <script type="text/javascript" src="tank.js"></script>
 <script type="text/javascript" src="tank_battle.js"></script>
-<!-- <script type="text/javascript" src="socket.js"></script> -->
+<script type="text/javascript" src="socket.js"></script>
 <!-- <script type="text/javascript" src="text.js"></script> -->
 </body>
 

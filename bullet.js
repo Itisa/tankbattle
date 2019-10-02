@@ -1,6 +1,6 @@
-function Bullet(x,y,facing,firer,team,stop=false) {
+function Bullet(firer,x,y,facing,stop=false) {
 	this.firer = firer;
-	this.team = team;
+	this.team = firer.team;
 	this.speed = 35;
 
 	this.facing = facing;
@@ -17,18 +17,19 @@ var psm = Bullet.prototype
 
 psm.move = function() {
 	// console.log(this.sin,this.cos,this.facing)
-	if (this.stop==true) {return 0}
-	this.x += this.speed*this.sin;
-	this.y -= this.speed*this.cos;
-	// this.speed -= 0.5
-	if (this.speed<=0) {this.delete=true}
-	var x=this.x, y = this.y;
-	if (x>1400) {this.delete=true}
-	if (x<0) {this.delete=true}
-	if (y>700) {this.delete=true}
-	if (y<0) {this.delete=true}
-	// console.log(this)
-	this.if_impact()
+	if (this.stop==false) {
+		this.x += this.speed*this.sin;
+		this.y -= this.speed*this.cos;
+		// this.speed -= 0.5
+		if (this.speed<=0) {this.delete=true}
+		var x=this.x, y = this.y;
+		if (x>1400) {this.delete=true}
+		if (x<0) {this.delete=true}
+		if (y>700) {this.delete=true}
+		if (y<0) {this.delete=true}
+		// console.log(this)
+		this.if_impact()
+	}
 }
 psm.if_impact = function() {
 	var canvas = document.getElementById('main');

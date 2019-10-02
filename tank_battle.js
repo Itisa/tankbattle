@@ -1,19 +1,69 @@
-var sett,f=0.25,size=1,speed=10
+var sett,f=0.25,size=1,speed=10,gt=0
 var jx=0,jy=0 //jia1 su4 du4
-var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0
+var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_begin=false
 //userid,username,x,y,facing,team
-var p = new Tank(1,'321',200,100,130,'red')
-var p1 = new Tank(2,'2345',1200,200,0,'blue')
+// var p = new Tank(1,'321',200,100,130,'red')
 map1 = [[1,100,100,10,200],[1,600,50,200,10],[1,300,300,10,200],[1,450,200,10,200]]
-var bx = new Bullet(0,0,0,0,0,true)
-var p_all=[p,p1],b = [bx]
+var bx = new Bullet(0,0,0,0,true)
+var p_all=[],b = [bx]
 var text = [['hello','blue','hi','red',100]];
 //x,y,facing,jx,jy
 
-var canvas = document.getElementById('main');
-var c = canvas.getContext("2d");
 
-adjustCanvas(canvas,c)
+var thisuserid = Math.floor(Math.random()*100000);
+
+var mdict = {'pkey':'pk:10','cmd':'init_user','userkey':thisuserid+''};
+
+
+function pack(cmd,data) {
+	var postdict = {},act={};
+	postdict['cmd'] = 'broadmsg';
+	act['data'] = data;
+	act['cmd'] = cmd;
+	var ss = JSON.stringify(act);
+	postdict['action'] = ss;
+	return postdict
+
+}
+
+
+function init() {
+	if (if_begin==false) {sett = setInterval(time,50);if_begin=true;}
+	
+
+}
+
+function post_userinfo() {
+	/////
+	var use = document.getElementById('get_username').value
+	console.log(use,'here')
+}
+
+function wait() {
+	var canvas = document.getElementById('main');
+	var c = canvas.getContext("2d");
+		
+	var doc = document.getElementsByTagName('button')
+	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+	doc = document.getElementsByTagName('p')
+	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+	doc = document.getElementsByTagName('a')
+	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+	doc = document.getElementsByTagName('input');
+	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+
+	adjustCanvas(canvas,c)
+	c.font = "30px bold 黑体";
+	c.fillText('Wait to begin',600,300);
+	c.stroke()
+	var username = '123',userid = 1234
+	c.font = "15px bold 黑体";
+	c.fillText('username:'+username,10,20)
+	c.fillText('userid:'+userid,10,40)
+	c.stroke()
+	init()
+}
+
 
 function clean_board() {
 	var canvas = document.getElementById('main');
@@ -22,9 +72,7 @@ function clean_board() {
 }
 
 
-function init() {
-	sett = setInterval(time,50)
-}
+
 
 function draw_map() {
 	var canvas = document.getElementById('main');
@@ -46,6 +94,8 @@ function draw_map() {
 
 function draw_tank(x,y,facing,health,bu_cd,team) {
 	// console.log('draw',x,y,facing)
+	var canvas = document.getElementById('main');
+	var c = canvas.getContext("2d");
 	c.beginPath();
 	var sin = Math.sin(facing*Math.PI/180);
 	var cos = Math.cos(facing*Math.PI/180);
@@ -160,61 +210,71 @@ function draw_text() {
 }
 
 function time() {
-
+	// gt+=1;
 	clean_board()
-
+	console.log(b)
 	draw_map()
 	draw_text()
-	for (var i = 0; i < p_all.length; i++) {
-		var pp = p_all[i]
 
-		if (pp.delete==true) {continue;}
-		if (i==1){
-			draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
-			continue
-		}
+	// if (pp.delete==true) {continue;}
+	// if (i==1){
+	// 	draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
+	// 	continue
+	// }
 
-
-		if (pp.bu_cd>0) {pp.bu_cd-=1}
-		// console.log(p_all,pp.x)
-		if (if_f==1) {
-			if (pp.bu_cd==0) {pp.fire();pp.bu_cd=0}
+	// console.log(mt,'mt')
+	if (mt.bu_cd>0) {mt.bu_cd-=1}
+	// console.log(p_all,pp.x)
+	if (if_f==1) {
+		if (mt.bu_cd==0) {
+			mt.fire();
+			mt.bu_cd=10;
 		}
-		if (!(if_d&&if_a)) {
-			if (if_d==1) {pp.facing+=10;pp.turn()}
-			if (if_a==1) {pp.facing-=10;pp.turn()}
-			// if (if_d==1) {
-			// 	if (if_s==1){pp.facing-=10;}
-			// 	else {pp.facing+=10;}
-			// 	pp.turn();
-			// 	}
-			// if (if_a==1) {
-			// 	if (if_s==1){pp.facing+=10;}
-			// 	else {pp.facing-=10;}
-			// 	pp.turn();
-			// }
-		}
-		if (!(if_w&&if_s)) {
-			// if (if_w) {pp.jx += 1*pp.sin;pp.jy -= 1*pp.cos}
-			
-			// console.log(pp.jx,pp.jy)
-			if (if_w==1) {pp.x+=speed*pp.sin;pp.y-=speed*pp.cos}
-			if (if_s==1) {pp.x-=speed*pp.sin;pp.y+=speed*pp.cos}
-		}
-		// pp.move();
-		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team)
 	}
+	if (!(if_d&&if_a)) {
+		if (if_d==1) {mt.facing+=10;mt.turn()}
+		if (if_a==1) {mt.facing-=10;mt.turn()}
+		// if (if_d==1) {
+		// 	if (if_s==1){pp.facing-=10;}
+		// 	else {pp.facing+=10;}
+		// 	pp.turn();
+		// 	}
+		// if (if_a==1) {
+		// 	if (if_s==1){pp.facing+=10;}
+		// 	else {pp.facing-=10;}
+		// 	pp.turn();
+		// }
+	}
+	if (!(if_w&&if_s)) {
+		// if (if_w) {pp.jx += 1*pp.sin;pp.jy -= 1*pp.cos}
+		
+		// console.log(pp.jx,pp.jy)
+		if (if_w==1) {mt.x+=speed*mt.sin;mt.y-=speed*mt.cos}
+		if (if_s==1) {mt.x-=speed*mt.sin;mt.y+=speed*mt.cos}
+	}
+	if (gt%20==0) {
+		var postdict = pack('move_tank',mt);
+		postdata(postdict);
+	}
+	
 
+	for (var i = 0; i < p_all.length; i++) {
+		var pp = p_all[i];
+		// console.log('draw_tank','#####',i)
+		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
+	}
+	
 	for (var i = b.length - 1; i >= 0; i--) {
 		var bb = b[i];
+		// if (bb.stop==true) {continue;}
 		if (bb.delete==false) {
-			bb.move();
 			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent, bb.team);
+			bb.move();
 		}else{
+			// console.log(bb,i)
 			b.splice(i,1)
 		}
 	}
-
 }
 
 function presskey(ev) {
@@ -302,6 +362,6 @@ function adjustCanvas(canvas, context) {
     context.scale(ratio, ratio);
 }
 
-
+wait()
 init()
 

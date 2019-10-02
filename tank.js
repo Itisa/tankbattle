@@ -23,7 +23,10 @@ psm.hitted = function(firer) {
 	this.health -= 1
 	console.log(this.health)
 	if (this.health==0){
-		this.delete = true;
+		// var postdict=pack('this_die',this)
+		// postdata(postdict)
+		// this.delete = true;
+		this.health = 10
 
 		text.push([firer.username,firer.team,this.username,this.team,100])
 		// console.log(text)
@@ -48,7 +51,16 @@ psm.move = function() {
 }
 
 psm.fire = function() {
-	var bu = new Bullet(this.x, this.y, this.facing, this,this.team);
+	var bu = new Bullet(this, this.x, this.y, this.facing);
+	// var postdict = {'cmd':'broadmsg','msg':['new_bullet',bu.firer]};
+	// var postdict = {},act={};
+	// postdict['cmd'] = 'broadmsg';
+	// act['new_bullet'] = bu.firer;
+	// var ss = JSON.stringify(act);
+	// postdict['action'] = ss;
+	var postdict = pack('new_bullet',bu.firer)
+	postdata(postdict);
+
 	b.push(bu);
 }
 psm.turn = function() {

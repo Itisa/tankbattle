@@ -245,10 +245,11 @@ function time() {
 	}
 
 	if (!(if_q&&if_e)) {
-		if (if_q==1) {mt.turngun(-10)}
-		else if (if_e==1) {mt.turngun(10)}
+		if (if_q==1) {mt.turngun(-5)}
+		else if (if_e==1) {mt.turngun(5)}
 	}
 	if (gt%20==0) {
+		// console.log(mt)
 		var postdict = pack('move_tank',mt);
 		postdata(postdict);
 	}

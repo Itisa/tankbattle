@@ -1,4 +1,4 @@
-var url = '#####################';
+var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
 
 
 var so = new WebSocket(url);
@@ -99,16 +99,21 @@ so.onmessage = function (event) {
 					pp.x = da.x;
 					pp.y = da.y;
 					pp.facing = da.facing;
+					pp.sin = da.sin;
+					pp.cos = da.cos;
+					pp.gsin = da.gsin;
+					pp.gcos = da.gcos;
 					pp.health = da.health;
 					pp.bu_cd = da.bu_cd;
 					pp.team = da.team;
+
 					break;
 				}
 			}
 		}
 		else if (msga.cmd=='new_bullet') {
 			// console.log(da,'nb')
-			var newb = new Bullet(da, da.x, da.y, da.facing)
+			var newb = new Bullet(da, da.x, da.y, da.gunfacing)
 			b.push(newb)
 			//firer,x,y,facing
 		}
@@ -119,6 +124,6 @@ so.onmessage = function (event) {
 function postdata(data) {
 
 	var t = JSON.stringify(data);
-	// console.log(t,'up')
+	console.log(t,'up')
 	so.send(t);
 }

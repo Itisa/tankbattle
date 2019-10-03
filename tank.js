@@ -88,6 +88,7 @@ psm.turn = function(degree) {
 
 psm.ifmove = function(cmd,da) {
 	// var sin = this.sin, cos = this.cos;
+	var ifx,ify,ifsin,ifcos,iffacing
 	if (cmd=='turn'){
 		var iffacing = this.facing+da, ifgunfacing = this.gunfacing+da;
 		var ifsin = Math.sin(iffacing*Math.PI/180);

@@ -1,9 +1,10 @@
 var sett,f=0.25,size=1,speed=10,gt=0
 var jx=0,jy=0 //jia1 su4 du4
-var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_begin=false
+var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_q=0,if_e=0,if_begin=false
 //userid,username,x,y,facing,team
 // var p = new Tank(1,'321',200,100,130,'red')
-map1 = [[1,100,100,10,200],[1,600,50,200,10],[1,300,300,10,200],[1,450,200,10,200]]
+// var mt = new Tank(1,'321',200,300,330,'red')
+var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20,200],[1,450,200,20,200],[1,600,300,20,300],[1,700,200,100,20],[1,800,400,20,150],[1,950,300,300,20]]
 var bx = new Bullet(0,0,0,0,true)
 var p_all=[],b = [bx]
 var text = [['hello','blue','hi','red',100]];
@@ -33,7 +34,7 @@ function init() {
 }
 
 function post_userinfo() {
-	/////
+	/////////////////////
 	var use = document.getElementById('get_username').value
 	console.log(use,'here')
 }
@@ -87,15 +88,18 @@ function draw_map() {
 	}
 }
 
-function draw_tank(x,y,facing,health,bu_cd,team) {
+function draw_tank(pp) {
+	//x,y,facing,health,bu_cd,team
 	// console.log('draw',x,y,facing)
+	var sin=pp.sin, cos=pp.cos, team=pp.team, bu_cd=pp.bu_cd, health=pp.health, gsin=pp.gsin, gcos=pp.gcos
+	
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
 	c.beginPath();
-	var sin = Math.sin(facing*Math.PI/180);
-	var cos = Math.cos(facing*Math.PI/180);
+	// var sin = Math.sin(facing*Math.PI/180);
+	// var cos = Math.cos(facing*Math.PI/180);
 
-	c.translate(x,y);
+	c.translate(pp.x,pp.y);
 
 	//body
 	c.moveTo((-20*cos+25*sin)*size,(-20*sin-25*cos)*size);
@@ -110,10 +114,10 @@ function draw_tank(x,y,facing,health,bu_cd,team) {
 	
 	//drive box
 	c.beginPath();
-	c.moveTo((-10*cos+15*sin)*size,(-10*sin-15*cos)*size);
-	c.lineTo((-10*cos-5*sin)*size,(-10*sin+5*cos)*size);
-	c.lineTo((10*cos-5*sin)*size,(10*sin+5*cos)*size);
-	c.lineTo((10*cos+15*sin)*size,(10*sin-15*cos)*size);
+	c.moveTo((-10*gcos+15*gsin)*size,(-10*gsin-15*gcos)*size);
+	c.lineTo((-10*gcos-5*gsin)*size,(-10*gsin+5*gcos)*size);
+	c.lineTo((10*gcos-5*gsin)*size,(10*gsin+5*gcos)*size);
+	c.lineTo((10*gcos+15*gsin)*size,(10*gsin-15*gcos)*size);
 	c.closePath();
 	c.strokeStyle = 'black';
 	c.lineWidth = 2*size;
@@ -123,8 +127,8 @@ function draw_tank(x,y,facing,health,bu_cd,team) {
 	c.beginPath();
 	// c.moveTo(0*cos+5*sin,0*sin-5*cos)
 	// c.lineTo(0*cos+30*sin,0*sin-30*cos)
-	c.moveTo((5*sin)*size,(-5*cos)*size);
-	c.lineTo((30*sin)*size,(-30*cos)*size);
+	c.moveTo((5*gsin)*size,(-5*gcos)*size);
+	c.lineTo((30*gsin)*size,(-30*gcos)*size);
 	c.closePath();
 	c.strokeStyle = 'black';
 	c.lineWidth = 2*size;
@@ -133,8 +137,8 @@ function draw_tank(x,y,facing,health,bu_cd,team) {
 	//health bar
 	c.beginPath();
 	var hea = health*3-15
-	c.moveTo((-15*cos-10*sin)*size,(-15*sin+10*cos)*size);
-	c.lineTo((hea*cos-10*sin)*size,(hea*sin+10*cos)*size);
+	c.moveTo((-15*gcos-10*gsin)*size,(-15*gsin+10*gcos)*size);
+	c.lineTo((hea*gcos-10*gsin)*size,(hea*gsin+10*gcos)*size);
 	c.closePath();
 	c.strokeStyle = 'red';
 	c.lineWidth = 5*size;
@@ -143,14 +147,14 @@ function draw_tank(x,y,facing,health,bu_cd,team) {
 	//gun_cd bar
 	c.beginPath();
 	var cd_b = bu_cd*(-3)+15
-	c.moveTo((-15*cos-18*sin)*size,(-15*sin+18*cos)*size);
-	c.lineTo((cd_b*cos-18*sin)*size,(cd_b*sin+18*cos)*size);
+	c.moveTo((-15*gcos-18*gsin)*size,(-15*gsin+18*gcos)*size);
+	c.lineTo((cd_b*gcos-18*gsin)*size,(cd_b*gsin+18*gcos)*size);
 	c.closePath();
 	c.strokeStyle = 'black';
 	c.lineWidth = 5*size;
 	c.stroke()
 
-	c.translate(-x,-y);
+	c.translate(-pp.x,-pp.y);
 }
 
 function draw_bullet(x,y,sin,cos,lent,team) {
@@ -217,8 +221,8 @@ function time() {
 		}
 	}
 	if (!(if_d&&if_a)) {
-		if (if_d==1) {mt.facing+=10;mt.turn()}
-		if (if_a==1) {mt.facing-=10;mt.turn()}
+		if (if_d==1) {mt.ifmove('turn',10)}
+		else if (if_a==1) {mt.ifmove('turn',-10)}
 		// if (if_d==1) {
 		// 	if (if_s==1){pp.facing-=10;}
 		// 	else {pp.facing+=10;}
@@ -233,13 +237,16 @@ function time() {
 	if (!(if_w&&if_s)) {
 		
 		if (if_w==1) {
-			mt.x+=speed*mt.sin;
-			mt.y-=speed*mt.cos;
+			mt.ifmove('move',10)
 		}
-		if (if_s==1) {
-			mt.x-=speed*mt.sin;
-			mt.y+=speed*mt.cos;
+		else if (if_s==1) {
+			mt.ifmove('move',-10)
 		}
+	}
+
+	if (!(if_q&&if_e)) {
+		if (if_q==1) {mt.turngun(-10)}
+		else if (if_e==1) {mt.turngun(10)}
 	}
 	if (gt%20==0) {
 		var postdict = pack('move_tank',mt);
@@ -249,7 +256,8 @@ function time() {
 
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i];
-		draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
+		// draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
+		draw_tank(pp);
 	}
 	
 	for (var i = b.length - 1; i >= 0; i--) {
@@ -266,26 +274,36 @@ function time() {
 
 function presskey(ev) {
 	var c = ev.keyCode;
+	// console.log(ev,c)
 	switch(c){
 	case 38:
 	case 87://w
-		if_w = 1
+		if_w = 1;
 		break;
 	case 83://s
 	case 40:
-		if_s = 1 
+		if_s = 1;
 		break;
 	case 39:
 	case 68://d
-		if_d = 1
+		if_d = 1;
 		break;
 	case 37:
 	case 65://a
-		if_a = 1
+		if_a = 1;
 		break;
-	case 70:
+	case 70://f
 	case 13:
-		if_f = 1
+	case 32://space
+		if_f = 1;
+		break;
+	case 81://q
+	case 90://z
+		if_q = 1;
+		break;
+	case 69://e
+	case 88://x
+		if_e = 1;
 		break;
 	}
 }
@@ -294,24 +312,32 @@ function keyup(ev) {
 	switch(c){
 	case 38:
 	case 87://w
-		if_w = 0
+		if_w = 0;
 		break;
 	case 83://s
 	case 40:
-		if_s = 0
+		if_s = 0;
 		break;
 	case 39:
 	case 68://d
-		if_d = 0
+		if_d = 0;
 		break;
 	case 37:
 	case 65://a
-
-		if_a = 0
+		if_a = 0;
 		break;
 	case 70:
 	case 13:
-		if_f = 0
+	case 32:
+		if_f = 0;
+		break;
+	case 81://q
+	case 90://z
+		if_q = 0;
+		break;
+	case 69://e
+	case 88://x
+		if_e = 0;
 		break;
 	}
 }
@@ -346,4 +372,4 @@ function adjustCanvas(canvas, context) {
 }
 
 wait()
-init()
+// init()

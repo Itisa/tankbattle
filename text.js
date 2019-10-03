@@ -1,3 +1,0 @@
-function Text(x,y,text) {
-	// body...
-}

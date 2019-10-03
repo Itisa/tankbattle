@@ -1,14 +1,16 @@
-var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
+var url = '#####################';
+
 
 var so = new WebSocket(url);
 var mt;
-// var mdict = ;
+var mdict;
 so.onmessage = function (event) {
 	var msg = JSON.parse(event.data);
 
 	// console.log(msg,'down');
 	
 	if (msg.action=='connected') {
+		// init()
 		var team='blue';
 		var	x = Math.floor(Math.random()*1400);
 		var y = Math.floor(Math.random()*300);
@@ -78,6 +80,11 @@ so.onmessage = function (event) {
 
 			console.log(p_all,'all tank')
 			console.log(da.x,msga)
+			if (!if_begin) {
+				var postdict = pack('start');
+				postdata(postdict);
+				init();
+			}
 			//userid,username,x,y,facing,team
 		}
 		else if (msga.cmd=='move_tank') {

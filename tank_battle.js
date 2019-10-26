@@ -1,13 +1,14 @@
 var sett,f=0.25,size=1,speed=10,gt=0
 var jx=0,jy=0 //jia1 su4 du4
 var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_q=0,if_e=0,if_begin=false
+var ifconnected = false
 //userid,username,x,y,facing,team
 // var p = new Tank(1,'321',200,100,130,'red')
 // var mt = new Tank(1,'321',200,300,330,'red')
 var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20,200],[1,450,200,20,200],[1,600,300,20,300],[1,700,200,100,20],[1,800,400,20,150],[1,950,300,300,20]]
 var bx = new Bullet(0,0,0,0,true)
-var p_all=[],b = [bx]
-var text = [['hello','blue','hi','red',100]];
+var p_all=[],b_all = [bx]
+var text = [['hello','blue','hi','red',100]],t=[];
 //x,y,facing,jx,jy
 
 
@@ -15,14 +16,23 @@ var thisuserid = Math.floor(Math.random()*100000);
 
 
 
-function pack(cmd,data) {
-	var postdict = {},act={};
-	postdict['cmd'] = 'broadmsg';
-	act['data'] = data;
-	act['cmd'] = cmd;
-	var ss = JSON.stringify(act);
-	postdict['action'] = ss;
+function pack(action,data) {
+	var postdict = {};
+	postdict['data'] = data;
+	postdict['action'] = action;
+	postdict['thisuserid'] = thisuserid;
+	var ss = JSON.stringify(postdict);
 	return postdict;
+}
+function postkey(method,key) {
+	if (method=='down') {
+		var post = pack('keydown',key);
+		postdata(post);
+	}
+	else if (method=='up') {
+		var post = pack('keyup',key);
+		postdata(post);
+	}
 }
 
 
@@ -49,8 +59,10 @@ function wait() {
 	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
 	doc = document.getElementsByTagName('a')
 	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
-	doc = document.getElementsByTagName('input');
-	for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+	// doc = document.getElementsByTagName('input');
+	// for (var i = 0; i < doc.length; i++) {doc[i].hidden = true}
+	document.getElementById('get_username').hidden = true;
+	document.getElementById('password').hidden = true;
 
 	adjustCanvas(canvas,c)
 	c.font = "30px bold 黑体";
@@ -91,8 +103,12 @@ function draw_map() {
 function draw_tank(pp) {
 	//x,y,facing,health,bu_cd,team
 	// console.log('draw',x,y,facing)
-	var sin=pp.sin, cos=pp.cos, team=pp.team, bu_cd=pp.bu_cd, health=pp.health, gsin=pp.gsin, gcos=pp.gcos
-	
+	// var sin=pp.sin, cos=pp.cos, team=pp.team, bu_cd=pp.bu_cd, health=pp.health, gsin=pp.gsin, gcos=pp.gcos
+	var sin = Math.sin(pp.facing*Math.PI/180);
+	var cos = Math.cos(pp.facing*Math.PI/180);
+
+
+
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
 	c.beginPath();
@@ -108,51 +124,51 @@ function draw_tank(pp) {
 	c.lineTo((20*cos+25*sin)*size,(20*sin-25*cos)*size);
 	c.closePath();
 	c.lineWidth = 5*size;
-	c.strokeStyle = team;
+	c.strokeStyle = 'white';
 	c.stroke();
 	// c.fillRect(-10,-15,20,20)
 	
-	//drive box
-	c.beginPath();
-	c.moveTo((-10*gcos+15*gsin)*size,(-10*gsin-15*gcos)*size);
-	c.lineTo((-10*gcos-5*gsin)*size,(-10*gsin+5*gcos)*size);
-	c.lineTo((10*gcos-5*gsin)*size,(10*gsin+5*gcos)*size);
-	c.lineTo((10*gcos+15*gsin)*size,(10*gsin-15*gcos)*size);
-	c.closePath();
-	c.strokeStyle = 'black';
-	c.lineWidth = 2*size;
-	c.stroke();
+	// //drive box
+	// c.beginPath();
+	// c.moveTo((-10*gcos+15*gsin)*size,(-10*gsin-15*gcos)*size);
+	// c.lineTo((-10*gcos-5*gsin)*size,(-10*gsin+5*gcos)*size);
+	// c.lineTo((10*gcos-5*gsin)*size,(10*gsin+5*gcos)*size);
+	// c.lineTo((10*gcos+15*gsin)*size,(10*gsin-15*gcos)*size);
+	// c.closePath();
+	// c.strokeStyle = 'black';
+	// c.lineWidth = 2*size;
+	// c.stroke();
 	
-	//gun
-	c.beginPath();
-	// c.moveTo(0*cos+5*sin,0*sin-5*cos)
-	// c.lineTo(0*cos+30*sin,0*sin-30*cos)
-	c.moveTo((5*gsin)*size,(-5*gcos)*size);
-	c.lineTo((30*gsin)*size,(-30*gcos)*size);
-	c.closePath();
-	c.strokeStyle = 'black';
-	c.lineWidth = 2*size;
-	c.stroke();
+	// //gun
+	// c.beginPath();
+	// // c.moveTo(0*cos+5*sin,0*sin-5*cos)
+	// // c.lineTo(0*cos+30*sin,0*sin-30*cos)
+	// c.moveTo((5*gsin)*size,(-5*gcos)*size);
+	// c.lineTo((30*gsin)*size,(-30*gcos)*size);
+	// c.closePath();
+	// c.strokeStyle = 'black';
+	// c.lineWidth = 2*size;
+	// c.stroke();
 
-	//health bar
-	c.beginPath();
-	var hea = health*3-15
-	c.moveTo((-15*gcos-10*gsin)*size,(-15*gsin+10*gcos)*size);
-	c.lineTo((hea*gcos-10*gsin)*size,(hea*gsin+10*gcos)*size);
-	c.closePath();
-	c.strokeStyle = 'red';
-	c.lineWidth = 5*size;
-	c.stroke()
+	// //health bar
+	// c.beginPath();
+	// var hea = health*3-15
+	// c.moveTo((-15*gcos-10*gsin)*size,(-15*gsin+10*gcos)*size);
+	// c.lineTo((hea*gcos-10*gsin)*size,(hea*gsin+10*gcos)*size);
+	// c.closePath();
+	// c.strokeStyle = 'red';
+	// c.lineWidth = 5*size;
+	// c.stroke()
 
-	//gun_cd bar
-	c.beginPath();
-	var cd_b = bu_cd*(-3)+15
-	c.moveTo((-15*gcos-18*gsin)*size,(-15*gsin+18*gcos)*size);
-	c.lineTo((cd_b*gcos-18*gsin)*size,(cd_b*gsin+18*gcos)*size);
-	c.closePath();
-	c.strokeStyle = 'black';
-	c.lineWidth = 5*size;
-	c.stroke()
+	// //gun_cd bar
+	// c.beginPath();
+	// var cd_b = bu_cd*(-3)+15
+	// c.moveTo((-15*gcos-18*gsin)*size,(-15*gsin+18*gcos)*size);
+	// c.lineTo((cd_b*gcos-18*gsin)*size,(cd_b*gsin+18*gcos)*size);
+	// c.closePath();
+	// c.strokeStyle = 'black';
+	// c.lineWidth = 5*size;
+	// c.stroke()
 
 	c.translate(-pp.x,-pp.y);
 }
@@ -204,56 +220,88 @@ function draw_text() {
 	}
 }
 
+function draw_talk(x,y,text) {
+	var can = document.getElementById('main');
+	var c = can.getContext("2d");
+	c.font = "20px bold 黑体";
+	c.fillStyle = "#000";
+	
+	c.fillText(text,x,y)
+
+	// for (var i = 0; i < talk.length; i++) {
+	// 	var t = talk[i]
+	// 	c.fillText(t,1300,200+20*i)
+	// }
+
+
+	
+
+}
+
+function talk() {}
+
+function talk_post() {
+	var msg = document.getElementById('talk').value
+	if (msg!="") {
+		var upmsg = pack("talk_up",msg)
+		postdata(upmsg)
+	}
+}
 function time() {
 	// gt+=1;
 	clean_board()
 	// console.log(p_all)
-	draw_map()
+	// draw_map()
 	draw_text()
+	var p = pack('move','')
+	postdata(p)
 
-	// console.log(mt,'mt')
-	if (mt.bu_cd>0) {mt.bu_cd-=1}
-	// console.log(p_all,pp.x)
-	if (if_f==1) {
-		if (mt.bu_cd==0) {
-			mt.fire();
-			mt.bu_cd=10;
-		}
-	}
-	if (!(if_d&&if_a)) {
-		if (if_d==1) {mt.ifmove('turn',10)}
-		else if (if_a==1) {mt.ifmove('turn',-10)}
-		// if (if_d==1) {
-		// 	if (if_s==1){pp.facing-=10;}
-		// 	else {pp.facing+=10;}
-		// 	pp.turn();
-		// 	}
-		// if (if_a==1) {
-		// 	if (if_s==1){pp.facing+=10;}
-		// 	else {pp.facing-=10;}
-		// 	pp.turn();
-		// }
-	}
-	if (!(if_w&&if_s)) {
+	// // console.log(mt,'mt')
+	// if (mt.bu_cd>0) {mt.bu_cd-=1}
+	// // console.log(p_all,pp.x)
+	// if (if_f==1) {
+	// 	if (mt.bu_cd==0) {
+	// 		mt.fire();
+	// 		mt.bu_cd=10;
+	// 	}
+	// }
+	// if (!(if_d&&if_a)) {
+	// 	if (if_d==1) {mt.ifmove('turn',10)}
+	// 	else if (if_a==1) {mt.ifmove('turn',-10)}
+	// 	// if (if_d==1) {
+	// 	// 	if (if_s==1){pp.facing-=10;}
+	// 	// 	else {pp.facing+=10;}
+	// 	// 	pp.turn();
+	// 	// 	}
+	// 	// if (if_a==1) {
+	// 	// 	if (if_s==1){pp.facing+=10;}
+	// 	// 	else {pp.facing-=10;}
+	// 	// 	pp.turn();
+	// 	// }
+	// }
+	// if (!(if_w&&if_s)) {
 		
-		if (if_w==1) {
-			mt.ifmove('move',10)
-		}
-		else if (if_s==1) {
-			mt.ifmove('move',-10)
-		}
-	}
+	// 	if (if_w==1) {
+	// 		mt.ifmove('move',10)
+	// 	}
+	// 	else if (if_s==1) {
+	// 		mt.ifmove('move',-10)
+	// 	}
+	// }
 
-	if (!(if_q&&if_e)) {
-		if (if_q==1) {mt.turngun(-5)}
-		else if (if_e==1) {mt.turngun(5)}
-	}
-	if (gt%20==0) {
-		// console.log(mt)
-		var postdict = pack('move_tank',mt);
-		postdata(postdict);
-	}
+	// if (!(if_q&&if_e)) {
+	// 	if (if_q==1) {mt.turngun(-5)}
+	// 	else if (if_e==1) {mt.turngun(5)}
+	// }
+	// if (gt%20==0) {
+	// 	// console.log(mt)
+	// 	var postdict = pack('move_tank',mt);
+	// 	postdata(postdict);
+	// }
 	
+
+	draw_talk(100,200,p_all[0].sin)
+	draw_talk(100,300,p_all[0].cos)
 
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i];
@@ -261,42 +309,47 @@ function time() {
 		draw_tank(pp);
 	}
 	
-	for (var i = b.length - 1; i >= 0; i--) {
-		var bb = b[i];
+	for (var i = b_all.length - 1; i >= 0; i--) {
+		var bb = b_all[i];
 		// if (bb.stop==true) {continue;}
 		if (bb.dead==false) {
 			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent, bb.team);
 			bb.move();
 		}else{
-			b.splice(i,1)
+			b_all.splice(i,1)
 		}
 	}
 }
 
-function presskey(ev) {
+function keydown(ev) {
 	var c = ev.keyCode;
 	// console.log(ev,c)
 	switch(c){
 	case 38:
 	case 87://w
-		if_w = 1;
+		console.log('w');
+		postkey('down','w');
+		// if_w = 1;
 		break;
 	case 83://s
 	case 40:
-		if_s = 1;
+		postkey('down','s');
+		// if_s = 1;
 		break;
 	case 39:
 	case 68://d
-		if_d = 1;
+		postkey('down','d');
+		// if_d = 1;
 		break;
 	case 37:
 	case 65://a
-		if_a = 1;
+		postkey('down','a');
+		// if_a = 1;
 		break;
 	case 70://f
-	case 13:
 	case 32://space
-		if_f = 1;
+		postkey('down','f');
+		// if_f = 1;
 		break;
 	case 81://q
 	case 90://z
@@ -306,6 +359,9 @@ function presskey(ev) {
 	case 88://x
 		if_e = 1;
 		break;
+	case 13:
+		talk_post()
+		break;
 	}
 }
 function keyup(ev) {
@@ -313,24 +369,28 @@ function keyup(ev) {
 	switch(c){
 	case 38:
 	case 87://w
-		if_w = 0;
+		postkey('up','w');
+		// if_w = 0;
 		break;
 	case 83://s
 	case 40:
-		if_s = 0;
+		postkey('up','s');
+		// if_s = 0;
 		break;
 	case 39:
 	case 68://d
-		if_d = 0;
+		postkey('up','d');
+		// if_d = 0;
 		break;
 	case 37:
 	case 65://a
-		if_a = 0;
+		postkey('up','a');
+		// if_a = 0;
 		break;
 	case 70:
-	case 13:
 	case 32:
-		if_f = 0;
+		postkey('up','f');
+		// if_f = 0;
 		break;
 	case 81://q
 	case 90://z

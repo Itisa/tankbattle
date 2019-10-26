@@ -1,31 +1,45 @@
-var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
-
+// var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
+var url = 'ws://127.0.0.1:8888'
 
 var so = new WebSocket(url);
 var mt;
 var mdict;
 so.onmessage = function (event) {
+	// console.log(event)
 	var msg = JSON.parse(event.data);
 
-	// console.log(msg,'down');
+	// console.log(msg,'down',msg.data);
 	
 	if (msg.action=='connected') {
+		ifconnected = true
 		// init()
-		var team='blue';
-		var	x = Math.floor(Math.random()*1400);
-		var y = Math.floor(Math.random()*300);
-		if (thisuserid%2==1) {team='red';}
+		console.log('connected')
+		// // init()
+		// var team='blue';
+		// var	x = Math.floor(Math.random()*1400);
+		// var y = Math.floor(Math.random()*300);
+		// if (thisuserid%2==1) {team='red';}
 
-		mt = new Tank(thisuserid,'test',x,y,0,team);
-		p_all.push(mt);
-		console.log(mt,'mt');
-		
-		var initdict = {'pkey':'pk:10', 'cmd':'init_user','userkey':thisuserid+''};
-		postdata(initdict);	
-
+		// mt = new Tank(thisuserid,'test',x,y,0,team);
+		// p_all.push(mt);
+		// console.log(mt,'mt');
 	}
 	
-	if (msg.action=='onlineuser') {
+	else if (msg.action=="talk_down") {
+		talk.push(mag.data)
+	}
+
+	else if (msg.action=='init_user') {
+		p_all.push(msg.data)
+	}
+	else if (msg.action=='move_tank') {
+		p_all[0] = msg.data
+		console.log(msg.data)
+	}
+
+////////////////////////////////////////////////////////////////////
+
+	else if (msg.action=='onlineuser') {
 		var postdict = pack('new_tank',mt);
 		postdata(postdict);
 
@@ -40,7 +54,7 @@ so.onmessage = function (event) {
 	}
 	// console.log('##########################')
 
-	if (msg.action=='exit') {
+	else if (msg.action=='exit') {
 		for (var i = 0; i < p_all.length; i++) {
 
 			var pp = p_all[i];
@@ -51,7 +65,7 @@ so.onmessage = function (event) {
 		}
 	}
 
-	if (msg.action=='broad_msg_resp') {
+	else if (msg.action=='broad_msg_resp') {
 		// console.log(msg,'msgina')
 		var msga = {};
 		if (msg.msg) {
@@ -124,6 +138,6 @@ so.onmessage = function (event) {
 function postdata(data) {
 
 	var t = JSON.stringify(data);
-	console.log(t,'up')
+	// console.log(t,'up')
 	so.send(t);
 }

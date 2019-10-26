@@ -1,5 +1,7 @@
 // var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
-var url = 'ws://127.0.0.1:8888'
+// var url = 'ws://127.0.0.1:8888'
+
+var url = 'ws://192.168.0.104:8888'
 
 var so = new WebSocket(url);
 var mt;
@@ -12,7 +14,7 @@ so.onmessage = function (event) {
 	
 	if (msg.action=='connected') {
 		ifconnected = true
-		// init()
+		init()
 		console.log('connected')
 		// // init()
 		// var team='blue';
@@ -31,15 +33,32 @@ so.onmessage = function (event) {
 
 	else if (msg.action=='init_user') {
 		p_all.push(msg.data)
+		console.log(p_all,'p_all')
+	}
+	else if (msg.action=='onlineuser'){
+		for (var i = 0; i < msg.data.length; i++) {
+			var da = msg.data[i]
+			p_all.push(da)
+		}
 	}
 	else if (msg.action=='move_tank') {
-		p_all[0] = msg.data
-		console.log(msg.data)
+		// console.log(msg.data)
+		// console.log(p_all,'pppppp')
+		for (var i = 0; i < p_all.length; i++) {
+			var pp = p_all[i];
+			
+			if (pp.userid==msg.data.userid) {
+				p_all[i] = msg.data;
+				break;
+			
+			}
+		}
+
 	}
 
 ////////////////////////////////////////////////////////////////////
 
-	else if (msg.action=='onlineuser') {
+	else if (msg.action=='onlineuse') {
 		var postdict = pack('new_tank',mt);
 		postdata(postdict);
 

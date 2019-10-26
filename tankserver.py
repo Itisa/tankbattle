@@ -4,15 +4,22 @@ import tornado.websocket
 import json
 import random
 import math
+import os
 
-# class MainHandler(tornado.web.RequestHandler):
-#     def get(self):
-#         self.write("Hello, 1world")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-	# def post(self):
-	# 	self.get()
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        items = []
+        self.render("tank_battle.html", title="My title", items=items)
+        # self.write('123456')
+        # return '1'
+
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
-
+	def __init__(self,a,b):
+		super(EchoWebSocket,self).__init__(a,b)
+		self.userid = -1
+		a_apps.append(self)
 	
 	def check_origin(self,origin):
 		return True
@@ -20,35 +27,56 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def open(self):
 		print("WebSocket opened")
 		while 1:
-			userid = random.randint(1,100000)
-			if userid in a_onlineusers:
+			self.userid = random.randint(1,100000)
+			if self.userid in a_onlineusers:
 				continue
 			break
-		a_onlineusers.append(userid)
+		# self.userid = len(a_onlineusers)+1
 
+		a_onlineusers.append(self.userid)
+		print(a_onlineusers)
 		cmsg = self.pack('connected','')
 		self.write_message(cmsg)
+		######################### write connected
+
+
 		
-		nt = Tank(userid)
+		alldata = []
+		for i in a_tanks:
+			alldata.append(i.data)
+		omsg = self.pack('onlineuser',alldata)
+		self.write_message(omsg)
+
+		nt = Tank(self.userid)
 		a_tanks.append(nt)
 		jsnt = self.pack('init_user',nt.data)
 		self.write_message(jsnt)
 
+		for i in a_apps:
+			if a_apps==self:
+				continue
+			else:
+				omsg = self.pack('onlineuser',[nt.data])
+				i.write_message(omsg)
+		######################create a new Tank
+
+
 	def on_message(self, message):
-		# print('message',message)
+		
 		msg = json.loads(message)
 		# print(msg,'#'*20)
 		
 		act = msg['action']
 		data = msg['data']
-		nt = a_tanks[0]
+		index = a_onlineusers.index(self.userid)
+		nt = a_tanks[index]
+		# print('message',message,nt)
 		if act == 'new_tank_come':
 			pass
 		
 		elif act == 'keydown':
 			if data =='w':
 				nt.if_w = True
-				print('#'*40)
 			elif data =='s':
 				nt.if_s = True
 			elif data =='a':
@@ -70,12 +98,17 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 			elif data =='f':
 				nt.if_f = False
 		elif act == 'move':
-			jsnt = self.pack('move_tank',a_tanks[0].data)
-			self.write_message(jsnt)
-			a_tanks[0].move()
-
+			# print('move',nt.if_w,nt.if_s,nt.if_a,nt.if_d)
+			self.move()
+			for i in a_tanks:
+			
+				jsnt = self.pack('move_tank',i.data)
+				self.write_message(jsnt)
 
 	def on_close(self):
+		index = a_onlineusers.index(self.userid)
+		a_tanks.pop(index)
+		a_onlineusers.pop(index)
 		print("WebSocket closed")
 
 	def pack(self,action,data):
@@ -87,12 +120,20 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		return jsmsg
 
 	def move(self):
+		index = a_onlineusers.index(self.userid)
+		nt = a_tanks[index]
 		nt.move()
+		# nt.move()
 
 def make_app():
-	return tornado.web.Application([
-		(r"/", EchoWebSocket),
-	])
+	return tornado.web.Application(
+		[
+			(r"/", EchoWebSocket),
+			(r"/home", MainHandler),
+		],
+		template_path=os.path.join(BASE_DIR, "templates"),
+		static_path=os.path.join(BASE_DIR, "static")
+	)
 
 class Tank():
 	def __init__(self,userid):
@@ -115,6 +156,7 @@ class Tank():
 		self.data['userid'] = self.userid
 	
 	def move(self):
+		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
 		if not(self.if_w and self.if_s):
 			if self.if_w:
 				self.x = self.x+10*self.sin
@@ -172,7 +214,11 @@ class Bullet():
 		
 
 if __name__ == "__main__":
+	# print(os.path.join(os.path.dirname(__file__), "templates"))
+	# print(os.path.abspath(__file__))
+	# print(BASE_DIR)
 	app = make_app()
+	a_apps = []
 	a_onlineusers = []
 	a_tanks = []
 	a_bullets = []

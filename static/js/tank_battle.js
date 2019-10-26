@@ -106,6 +106,8 @@ function draw_tank(pp) {
 	// var sin=pp.sin, cos=pp.cos, team=pp.team, bu_cd=pp.bu_cd, health=pp.health, gsin=pp.gsin, gcos=pp.gcos
 	var sin = Math.sin(pp.facing*Math.PI/180);
 	var cos = Math.cos(pp.facing*Math.PI/180);
+	var gsin = sin;
+	var gcos = cos;
 
 
 
@@ -128,27 +130,27 @@ function draw_tank(pp) {
 	c.stroke();
 	// c.fillRect(-10,-15,20,20)
 	
-	// //drive box
-	// c.beginPath();
-	// c.moveTo((-10*gcos+15*gsin)*size,(-10*gsin-15*gcos)*size);
-	// c.lineTo((-10*gcos-5*gsin)*size,(-10*gsin+5*gcos)*size);
-	// c.lineTo((10*gcos-5*gsin)*size,(10*gsin+5*gcos)*size);
-	// c.lineTo((10*gcos+15*gsin)*size,(10*gsin-15*gcos)*size);
-	// c.closePath();
-	// c.strokeStyle = 'black';
-	// c.lineWidth = 2*size;
-	// c.stroke();
+	//drive box
+	c.beginPath();
+	c.moveTo((-10*gcos+15*gsin)*size,(-10*gsin-15*gcos)*size);
+	c.lineTo((-10*gcos-5*gsin)*size,(-10*gsin+5*gcos)*size);
+	c.lineTo((10*gcos-5*gsin)*size,(10*gsin+5*gcos)*size);
+	c.lineTo((10*gcos+15*gsin)*size,(10*gsin-15*gcos)*size);
+	c.closePath();
+	c.strokeStyle = 'black';
+	c.lineWidth = 2*size;
+	c.stroke();
 	
-	// //gun
-	// c.beginPath();
-	// // c.moveTo(0*cos+5*sin,0*sin-5*cos)
-	// // c.lineTo(0*cos+30*sin,0*sin-30*cos)
-	// c.moveTo((5*gsin)*size,(-5*gcos)*size);
-	// c.lineTo((30*gsin)*size,(-30*gcos)*size);
-	// c.closePath();
-	// c.strokeStyle = 'black';
-	// c.lineWidth = 2*size;
-	// c.stroke();
+	//gun
+	c.beginPath();
+	// c.moveTo(0*cos+5*sin,0*sin-5*cos)
+	// c.lineTo(0*cos+30*sin,0*sin-30*cos)
+	c.moveTo((5*gsin)*size,(-5*gcos)*size);
+	c.lineTo((30*gsin)*size,(-30*gcos)*size);
+	c.closePath();
+	c.strokeStyle = 'black';
+	c.lineWidth = 2*size;
+	c.stroke();
 
 	// //health bar
 	// c.beginPath();
@@ -231,21 +233,7 @@ function draw_talk(x,y,text) {
 	// for (var i = 0; i < talk.length; i++) {
 	// 	var t = talk[i]
 	// 	c.fillText(t,1300,200+20*i)
-	// }
-
-
-	
-
-}
-
-function talk() {}
-
-function talk_post() {
-	var msg = document.getElementById('talk').value
-	if (msg!="") {
-		var upmsg = pack("talk_up",msg)
-		postdata(upmsg)
-	}
+	// }	
 }
 function time() {
 	// gt+=1;
@@ -300,8 +288,8 @@ function time() {
 	// }
 	
 
-	draw_talk(100,200,p_all[0].sin)
-	draw_talk(100,300,p_all[0].cos)
+	// draw_talk(100,200,p_all[0].sin)
+	// draw_talk(100,300,p_all[0].cos)
 
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i];
@@ -360,7 +348,7 @@ function keydown(ev) {
 		if_e = 1;
 		break;
 	case 13:
-		talk_post()
+		// talk_post()
 		break;
 	}
 }

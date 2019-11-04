@@ -1,24 +1,47 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import tornado.gen
 import json
 import random
 import math
 import os
+import threading
+import time
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        items = []
-        self.render("tank_battle.html", title="My title", items=items)
-        # self.write('123456')
-        # return '1'
+
+	# def set_default_headers(self):
+	# 	print('set headers!!')
+	# 	self.set_header('Access-Control-Allow-Origin', '*')
+	# 	self.set_header('Access-Control-Allow-Headers', '*')
+	# 	self.set_header('Access-Control-Max-Age', 1000)
+	# 	self.set_header('Content-type', 'application/json')
+	# 	self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+	# 	self.set_header('Access-Control-Allow-Headers',
+	# 					'Content-Type, Access-Control-Allow-Origin, Access-Control-Allow-Headers, X-Requested-By, Access-Control-Allow-Methods')
+	def get(self):
+		items = []
+		self.render("tank_battle.html", title="My title", items=items)
+		# self.write('123456')
+		# return '1'
+	
+	def OPTIONS(self):
+		pass
+
+	def post(self):
+		# cmd = self.get_argument('cmd')
+		print(a_tanks,a_onlineusers)
 
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
 	def __init__(self,a,b):
 		super(EchoWebSocket,self).__init__(a,b)
 		self.userid = -1
+		self.tank = -1
 		a_apps.append(self)
 	
 	def check_origin(self,origin):
@@ -34,12 +57,10 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		# self.userid = len(a_onlineusers)+1
 
 		a_onlineusers.append(self.userid)
-		print(a_onlineusers)
+		print(a_onlineusers,a_tanks)
 		cmsg = self.pack('connected','')
 		self.write_message(cmsg)
 		######################### write connected
-
-
 		
 		alldata = []
 		for i in a_tanks:
@@ -48,6 +69,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		self.write_message(omsg)
 
 		nt = Tank(self.userid)
+		self.tank = nt
 		a_tanks.append(nt)
 		jsnt = self.pack('init_user',nt.data)
 		self.write_message(jsnt)
@@ -62,7 +84,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 
 
 	def on_message(self, message):
-		
+		# cobj.onmsg(message)
 		msg = json.loads(message)
 		# print(msg,'#'*20)
 		
@@ -97,13 +119,13 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 				nt.if_d = False
 			elif data =='f':
 				nt.if_f = False
-		elif act == 'move':
-			# print('move',nt.if_w,nt.if_s,nt.if_a,nt.if_d)
-			self.move()
-			for i in a_tanks:
+		# elif act == 'move':
+		# 	# print('move',nt.if_w,nt.if_s,nt.if_a,nt.if_d)
+		# 	# self.move()
+		# 	for i in a_tanks:
 			
-				jsnt = self.pack('move_tank',i.data)
-				self.write_message(jsnt)
+		# 		jsnt = self.pack('move_tank',i.data)
+		# 		self.write_message(jsnt)
 
 	def on_close(self):
 		index = a_onlineusers.index(self.userid)
@@ -118,6 +140,12 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 			dmsg['data'] = data
 		jsmsg = json.dumps(dmsg)
 		return jsmsg
+
+	def downmsg(self):
+		# jsnt = self.pack('move_tank',self.tank.data)
+			# print(a_apps[i])
+		# self.write_message(jsnt)
+		time.sleep(0.1)
 
 	def move(self):
 		index = a_onlineusers.index(self.userid)
@@ -156,7 +184,7 @@ class Tank():
 		self.data['userid'] = self.userid
 	
 	def move(self):
-		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
+		print('move',self.if_w,self.if_s,self.if_a,self.if_d)
 		if not(self.if_w and self.if_s):
 			if self.if_w:
 				self.x = self.x+10*self.sin
@@ -210,8 +238,34 @@ class Bullet():
 		self.y = self.y-10*self.cos
 	def if_collide():
 		pass
-		
-		
+
+
+async def time_loop():
+	while True:
+		nxt = tornado.gen.sleep(60)   # Start the clock.
+		await pertime()  # Run while the clock is ticking.
+		await nxt
+
+def pertime():
+	pass
+
+
+
+def timeset():
+	t = 0
+	time.sleep(4)
+	print('awake')
+	while True:
+		time.sleep(0.1)
+		t += 0.1
+		for i in range(len(a_tanks)):
+			a_tanks[i].move()
+			a_apps[i].downmsg()
+			# a_tanks[i].move()
+			# jsnt = a_apps[i].pack('move_tank',a_tanks[i].data)
+			# print(a_apps[i])
+			# a_apps[i].write_message(jsnt)
+
 
 if __name__ == "__main__":
 	# print(os.path.join(os.path.dirname(__file__), "templates"))
@@ -223,4 +277,8 @@ if __name__ == "__main__":
 	a_tanks = []
 	a_bullets = []
 	app.listen(8888)
+	# th = threading.Thread(target=timeset,name='timeset')
+	# th.start()
+	# print(th)
+	tornado.ioloop.IOLoop.current().spawn_callback(time_loop)
 	tornado.ioloop.IOLoop.current().start()

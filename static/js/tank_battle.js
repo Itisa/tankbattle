@@ -8,12 +8,21 @@ var ifconnected = false
 var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20,200],[1,450,200,20,200],[1,600,300,20,300],[1,700,200,100,20],[1,800,400,20,150],[1,950,300,300,20]]
 var bx = new Bullet(0,0,0,0,true)
 var p_all=[],b_all = [bx]
-var text = [['hello','blue','hi','red',100]],t=[];
+var text = [['hello','blue','hi','red',100]],talk=[];
 //x,y,facing,jx,jy
 
 
 var thisuserid = Math.floor(Math.random()*100000);
 
+
+function pack_post(action,data) {
+	var postdict = {};
+	postdict['data'] = data;
+	postdict['action'] = action;
+	postdict['thisuserid'] = thisuserid;
+	var ss = JSON.stringify(postdict);
+	postdata(postdict)
+}
 
 
 function pack(action,data) {
@@ -41,12 +50,6 @@ function init() {
 		sett = setInterval(time,50);
 		if_begin=true;
 	}
-}
-
-function post_userinfo() {
-	/////////////////////
-	var use = document.getElementById('get_username').value
-	console.log(use,'here')
 }
 
 function wait() {
@@ -102,12 +105,12 @@ function draw_map() {
 
 function draw_tank(pp) {
 	//x,y,facing,health,bu_cd,team
-	// console.log('draw',x,y,facing)
 	// var sin=pp.sin, cos=pp.cos, team=pp.team, bu_cd=pp.bu_cd, health=pp.health, gsin=pp.gsin, gcos=pp.gcos
 	var sin = Math.sin(pp.facing*Math.PI/180);
 	var cos = Math.cos(pp.facing*Math.PI/180);
 	var gsin = sin;
 	var gcos = cos;
+	var team = pp.team
 
 
 
@@ -126,7 +129,7 @@ function draw_tank(pp) {
 	c.lineTo((20*cos+25*sin)*size,(20*sin-25*cos)*size);
 	c.closePath();
 	c.lineWidth = 5*size;
-	c.strokeStyle = 'white';
+	c.strokeStyle = team;
 	c.stroke();
 	// c.fillRect(-10,-15,20,20)
 	
@@ -199,50 +202,64 @@ function draw_text() {
 	c.font = "20px bold 黑体";
 	c.fillStyle = "#ff0";
 	
-	for (var i = 0; i < text.length; i++) {
-		text[i][4] -= 1;
-		if (text[i][4]==0) {
-			text.splice(i,1);
-			continue;
-		}
-		var tt = text[i];
-		c.textAlign = "right";
-		c.fillStyle = tt[1];
-		c.fillText(tt[0],1290,200+20*i);
-		// x += (tt[0].length+2)*10
-		c.textAlign = "left";
-		c.fillStyle = 'black';
-		c.fillText('kills',1300,200+20*i)
-		// x += (tt[2].length+2)*10
-		c.textAlign = "left";
-		c.fillStyle = tt[3];
-		c.fillText(tt[2],1350,200+20*i);
-		// c.fillText(text[i][0],text[i][1],text[i][2]);
-
+	// for (var i = 0; i < text.length; i++) {
+	// 	text[i][4] -= 1;
+	// 	if (text[i][4]==0) {
+	// 		text.splice(i,1);
+	// 		continue;
+	// 	}
+	// 	var tt = text[i];
+	// 	c.textAlign = "right";
+	// 	c.fillStyle = tt[1];
+	// 	c.fillText(tt[0],1290,200+20*i);
+	// 	// x += (tt[0].length+2)*10
+	// 	c.textAlign = "left";
+	// 	c.fillStyle = 'black';
+	// 	c.fillText('kills',1300,200+20*i)
+	// 	// x += (tt[2].length+2)*10
+	// 	c.textAlign = "left";
+	// 	c.fillStyle = tt[3];
+	// 	c.fillText(tt[2],1350,200+20*i);
+	// 	// c.fillText(text[i][0],text[i][1],text[i][2]);
+	// }
+	for (var i = 0; i < talk.length; i++) {
+		var t = talk[i]
+		// text,userid,team
+		draw_talk(1200,200+20*i,t[0],t[1],t[2])
 	}
+
+
+	
 }
 
-function draw_talk(x,y,text) {
+function draw_talk(x,y,text,userid,team) {
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
 	c.font = "20px bold 黑体";
-	c.fillStyle = "#000";
-	
+	c.fillStyle = team;
+	var t = userid+':'+text
 	c.fillText(text,x,y)
-
-	// for (var i = 0; i < talk.length; i++) {
-	// 	var t = talk[i]
-	// 	c.fillText(t,1300,200+20*i)
-	// }	
 }
+function talk_post() {
+	var data = {}
+	data['text'] = document.getElementById('talk').value
+	data['userid'] = myuserid
+	onmsg = pack('talk_up',data)
+	postdata(onmsg)
+	document.getElementById('talk').value = ''
+}
+function talk(ev) {
+	// body...
+}
+
 function time() {
 	// gt+=1;
 	clean_board()
 	// console.log(p_all)
 	// draw_map()
 	draw_text()
-	var p = pack('move','')
-	postdata(p)
+	// var p = pack('move','')
+	// postdata(p)
 
 	// // console.log(mt,'mt')
 	// if (mt.bu_cd>0) {mt.bu_cd-=1}
@@ -348,7 +365,7 @@ function keydown(ev) {
 		if_e = 1;
 		break;
 	case 13:
-		// talk_post()
+		talk_post()
 		break;
 	}
 }

@@ -1,62 +1,59 @@
-// var url = 'wss://roboter.101weiqi.com:9109/pp/pk';
 // var url = 'ws://127.0.0.1:8888'
 
-var url = 'ws://192.168.0.104:8888'
+var url = 'ws://192.168.0.101:8888'
 
 var so = new WebSocket(url);
 var mt;
 var mdict;
+var myuserid;
 so.onmessage = function (event) {
 	// console.log(event)
 	var msg = JSON.parse(event.data);
-
+	
 	// console.log(msg,'down',msg.data);
 	
 	if (msg.action=='connected') {
 		ifconnected = true
 		init()
 		console.log('connected')
-		// // init()
-		// var team='blue';
-		// var	x = Math.floor(Math.random()*1400);
-		// var y = Math.floor(Math.random()*300);
-		// if (thisuserid%2==1) {team='red';}
-
-		// mt = new Tank(thisuserid,'test',x,y,0,team);
-		// p_all.push(mt);
-		// console.log(mt,'mt');
 	}
 	
 	else if (msg.action=="talk_down") {
-		talk.push(mag.data)
+		talk.push([msg.data.text, msg.data.userid, msg.data.team])
 	}
 
-	else if (msg.action=='init_user') {
-		p_all.push(msg.data)
-		console.log(p_all,'p_all')
-	}
 	else if (msg.action=='onlineuser'){
 		for (var i = 0; i < msg.data.length; i++) {
 			var da = msg.data[i]
 			p_all.push(da)
 		}
 	}
+	else if (msg.action=='youruserid'){
+		myuserid = msg.data.userid
+	}
+
+	else if (msg.action=='move_all') {
+		p_all = msg.data
+	}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 	else if (msg.action=='move_tank') {
-		// console.log(msg.data)
-		// console.log(p_all,'pppppp')
 		for (var i = 0; i < p_all.length; i++) {
 			var pp = p_all[i];
 			
 			if (pp.userid==msg.data.userid) {
 				p_all[i] = msg.data;
-				break;
-			
+				break;			
 			}
 		}
 
 	}
 
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 	else if (msg.action=='onlineuse') {
 		var postdict = pack('new_tank',mt);
@@ -139,7 +136,6 @@ so.onmessage = function (event) {
 					pp.health = da.health;
 					pp.bu_cd = da.bu_cd;
 					pp.team = da.team;
-
 					break;
 				}
 			}
@@ -152,7 +148,7 @@ so.onmessage = function (event) {
 		}
 	}
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////
 
 function postdata(data) {
 

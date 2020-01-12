@@ -33,7 +33,12 @@ so.onmessage = function (event) {
 	}
 
 	else if (msg.action=='move_all') {
-		p_all = msg.data
+		p_all = msg.data[0]
+		// console.log(b_all[1][0])
+		b_all = msg.data[1]
+	}
+	else if (msg.action=='board') {
+		// board = msg.data
 	}
 
 
@@ -151,7 +156,6 @@ so.onmessage = function (event) {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function postdata(data) {
-
 	var t = JSON.stringify(data);
 	// console.log(t,'up')
 	so.send(t);

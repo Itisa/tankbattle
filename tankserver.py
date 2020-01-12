@@ -9,8 +9,6 @@ import os
 import threading
 import time
 
-
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class MainHandler(tornado.web.RequestHandler):
@@ -137,9 +135,11 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		return jsmsg
 
 	def downmsg(self):
-		alldata = []
+		alldata = [[],[]]
 		for i in a_tanks:
-			alldata.append(i.data)
+			alldata[0].append(i.data)
+		for i in a_bullets:
+			alldata[1].append(i.data)
 		omsg = self.pack('move_all',alldata)
 		self.write_message(omsg)
 
@@ -159,30 +159,43 @@ def make_app():
 		static_path=os.path.join(BASE_DIR, "static")
 	)
 
+def get_k(x,y,facing):
+	tan = math.tan(facing*math.pi/180)
+	a = get_kxy(x-y/tan,0,x,y)
+	print(a)
+	pass
+def get_kxy(x1,y1,x2,y2):
+	k = (y1-y2)/(x1-x2)
+	b = (x1*y2-x2*y1)/(x1-x2)
+	return (k,b)
+
 class Tank():
 	def __init__(self,userid,team):
 		self.userid = userid
-		self.pie = 3.1415926535
 		self.x = random.randint(1,1400)
 		self.y = random.randint(1,700)
 		self.facing = 0
-		self.sin = math.sin(self.facing*self.pie/180)
-		self.cos = math.sin(self.facing*self.pie/180)
+		self.sin = math.sin(self.facing*math.pi/180)
+		self.cos = math.sin(self.facing*math.pi/180)
 		self.if_w = False
 		self.if_s = False
 		self.if_a = False
 		self.if_d = False
 		self.if_f = False
 		self.team = team
+		self.bu_cd = 10
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
 		self.data['facing'] = self.facing
 		self.data['userid'] = self.userid
 		self.data['team'] = self.team
+		self.data['bu_cd'] = self.bu_cd
 	
 	def move(self):
 		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
+		if self.bu_cd > 0:
+			self.bu_cd -= 1
 		if not(self.if_w and self.if_s):
 			if self.if_w:
 				self.x = self.x+10*self.sin
@@ -196,11 +209,15 @@ class Tank():
 			elif self.if_a:
 				self.facing -= 10
 
-			self.sin = math.sin(self.facing*self.pie/180)
-			self.cos = math.cos(self.facing*self.pie/180)
+			self.sin = math.sin(self.facing*math.pi/180)
+			self.cos = math.cos(self.facing*math.pi/180)
 				
 		if self.if_f:
-			pass
+			if self.bu_cd == 0:
+				self.bu_cd = 10
+				newbullet = Bullet(self.x,self.y,self.facing)
+				a_bullets.append(newbullet)
+
 		self.data['x'] = int(self.x)
 		self.data['y'] = int(self.y)
 		self.data['facing'] = self.facing
@@ -220,21 +237,53 @@ class Tank():
 
 class Bullet():
 	def __init__(self,x,y,facing):
-		self.pie = 3.1415926535
-		self.x = x
-		self.y = y
 		self.facing = facing
-		self.sin = math.sin(self.facing*pie/180)
-		self.cos = math.cos(self.facing*pie/180)
+		self.sin = math.sin(self.facing*math.pi/180)
+		self.cos = math.cos(self.facing*math.pi/180)
+		self.x = x+50*self.sin
+		self.y = y-50*self.cos
 		self.dead = False
+		self.data = {}
+		self.data['x'] = self.x
+		self.data['y'] = self.y
+		self.data['facing'] = self.facing
+		# self.data['userid'] = self.userid
 	def move(self):
+		if self.x >= 1400 or self.x <= 0 or self.y >= 680 or self.y <=0:
+			self.dead = True
+			a_bullets.pop(a_bullets.index(self))
 		if self.dead == True:
 			return
-		self.x = int(self.x+10*self.sin)
-		self.y = int(self.y-10*self.cos)
-	def if_collide():
+		self.x = self.x+20*self.sin
+		self.y = self.y-20*self.cos
+		self.data['x'] = int(self.x)
+		self.data['y'] = int(self.y)
+		self.if_collide()
+	def if_collide(self):
 		pass
 
+def get_kb(x,y,facing):
+	tan = math.tan(facing*math.pi/180)
+	cos = math.cos(facing*math.pi/180)
+	sin = math.sin(facing*math.pi/180)
+	if tan == 0:
+		k1,b1 = (round(x),0.0)
+	else:
+		k1,b1 = get_kxy(x-y/tan,0,x,y)
+	k2 = k1
+	b2 = 5/cos+b1
+	k3 = -x/k1
+	b3 = x/k1+y
+	k4 = -x/k1
+	b4 = y-60*sin+(x-60*cos)/k1
+
+	return [(k1,b1),(k2,b2),(k3,b3),(k4,b4)]
+def get_kxy(x1,y1,x2,y2):
+	k = (y1-y2)/(x1-x2)
+	b = (x1*y2-x2*y1)/(x1-x2)
+	k = round(k,10)
+	b = round(b,10)
+	return (k,b)
 
 async def time_loop():
 	while True:
@@ -243,12 +292,16 @@ async def time_loop():
 		await nxt
 
 async def pertime():
+	for i in a_bullets:
+		# print(i.data)
+		i.move()
 	for i in range(len(a_tanks)):
 			a_tanks[i].move()
 			a_apps[i].downmsg()
 
 
 if __name__ == "__main__":
+	pie = 3.1415926535898
 	app = make_app()
 	a_apps = []
 	a_onlineusers = []

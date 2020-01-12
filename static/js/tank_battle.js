@@ -178,7 +178,7 @@ function draw_tank(pp) {
 	c.translate(-pp.x,-pp.y);
 }
 
-function draw_bullet(x,y,sin,cos,lent,team) {
+function draw_bullet(x,y,sin,cos,lent=30,team='red') {
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
 	c.translate(x,y);
@@ -192,6 +192,11 @@ function draw_bullet(x,y,sin,cos,lent,team) {
 	// c.closePath();
 	c.strokeStyle = team;
 	c.lineWidth = 5*size;
+	c.stroke();
+	c.beginPath();
+	c.moveTo(0,0);
+	c.lineTo(5,0);
+	c.strokeStyle = 'black';
 	c.stroke();
 	c.translate(-x,-y);
 }
@@ -240,17 +245,57 @@ function draw_talk(x,y,text,userid,team) {
 	var t = userid+':'+text
 	c.fillText(text,x,y)
 }
+
+function draw_board(bo) {
+	// console.log(bo)
+	var can = document.getElementById('main');
+	var c = can.getContext("2d");
+
+	for (var i = 0; i < bo.length; i++) {
+		var ba = bo[i];
+		for (var i1 = 0; i1 < ba.length; i1++) {
+			var bb = ba[i1];
+			// console.log(bb)
+			if (bb==''){}
+			else {
+				// console.log(i,i1);
+				c.strokeStyle = 'black';
+				// c.fillRect(i,i1,i+1,i1+1)
+				c.translate(i,i1);
+				c.beginPath();
+				c.moveTo(0,0);
+				c.lineTo(0,1);	
+				
+				c.lineWidth = 2;
+				c.stroke();
+				c.translate(-i,-i1);
+			}
+			
+		}
+	
+
+	}
+}
+
 function talk_post() {
 	var data = {}
-	data['text'] = document.getElementById('talk').value
-	data['userid'] = myuserid
-	onmsg = pack('talk_up',data)
-	postdata(onmsg)
-	document.getElementById('talk').value = ''
+	var text = document.getElementById('talk').value
+	if (text==""){
+		return
+	}
+	else {
+		data['text'] = text
+		data['userid'] = myuserid
+		onmsg = pack('talk_up',data)
+		postdata(onmsg)
+		document.getElementById('talk').value = ''
+	}
 }
 function talk(ev) {
 	// body...
 }
+
+
 
 function time() {
 	// gt+=1;
@@ -258,71 +303,23 @@ function time() {
 	// console.log(p_all)
 	// draw_map()
 	draw_text()
-	// var p = pack('move','')
-	// postdata(p)
+	// draw_board(board)
 
-	// // console.log(mt,'mt')
-	// if (mt.bu_cd>0) {mt.bu_cd-=1}
-	// // console.log(p_all,pp.x)
-	// if (if_f==1) {
-	// 	if (mt.bu_cd==0) {
-	// 		mt.fire();
-	// 		mt.bu_cd=10;
-	// 	}
-	// }
-	// if (!(if_d&&if_a)) {
-	// 	if (if_d==1) {mt.ifmove('turn',10)}
-	// 	else if (if_a==1) {mt.ifmove('turn',-10)}
-	// 	// if (if_d==1) {
-	// 	// 	if (if_s==1){pp.facing-=10;}
-	// 	// 	else {pp.facing+=10;}
-	// 	// 	pp.turn();
-	// 	// 	}
-	// 	// if (if_a==1) {
-	// 	// 	if (if_s==1){pp.facing+=10;}
-	// 	// 	else {pp.facing-=10;}
-	// 	// 	pp.turn();
-	// 	// }
-	// }
-	// if (!(if_w&&if_s)) {
-		
-	// 	if (if_w==1) {
-	// 		mt.ifmove('move',10)
-	// 	}
-	// 	else if (if_s==1) {
-	// 		mt.ifmove('move',-10)
-	// 	}
-	// }
 
-	// if (!(if_q&&if_e)) {
-	// 	if (if_q==1) {mt.turngun(-5)}
-	// 	else if (if_e==1) {mt.turngun(5)}
-	// }
-	// if (gt%20==0) {
-	// 	// console.log(mt)
-	// 	var postdict = pack('move_tank',mt);
-	// 	postdata(postdict);
-	// }
+	// console.log('in',b_all)
+	for (var i = b_all.length - 1; i >= 0; i--) {
+		var bb = b_all[i];
+		// if (bb.stop==true) {continue;}
+		var sin = Math.sin(bb.facing*Math.PI/180);
+		var cos = Math.cos(bb.facing*Math.PI/180);
+		// console.log(bb.x, bb.y, sin, cos)
+		draw_bullet(bb.x, bb.y, sin, cos);
+	}
 	
-
-	// draw_talk(100,200,p_all[0].sin)
-	// draw_talk(100,300,p_all[0].cos)
-
 	for (var i = 0; i < p_all.length; i++) {
 		var pp = p_all[i];
 		// draw_tank(pp.x, pp.y, pp.facing, pp.health, pp.bu_cd, pp.team);
 		draw_tank(pp);
-	}
-	
-	for (var i = b_all.length - 1; i >= 0; i--) {
-		var bb = b_all[i];
-		// if (bb.stop==true) {continue;}
-		if (bb.dead==false) {
-			draw_bullet(bb.x, bb.y, bb.sin, bb.cos, bb.lent, bb.team);
-			bb.move();
-		}else{
-			b_all.splice(i,1)
-		}
 	}
 }
 
@@ -332,7 +329,6 @@ function keydown(ev) {
 	switch(c){
 	case 38:
 	case 87://w
-		console.log('w');
 		postkey('down','w');
 		// if_w = 1;
 		break;

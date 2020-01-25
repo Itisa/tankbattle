@@ -47,7 +47,7 @@ function postkey(method,key) {
 
 function init() {
 	if (if_begin==false) {
-		sett = setInterval(time,100);
+		sett = setInterval(time,50);
 		if_begin=true;
 	}
 }
@@ -113,6 +113,7 @@ function draw_tank(pp) {
 	var team = pp.team
 	// console.log(pp)
 	var lines = pp.lines
+	var health = pp.health
 
 
 
@@ -156,10 +157,10 @@ function draw_tank(pp) {
 	c.strokeStyle = 'black';
 	c.lineWidth = 2*size;
 	c.stroke();
-	c.translate(-pp.x,-pp.y);
+	
 	//lines
 	// console.log(lines)
-	
+
 	// var l = lines[0];
 	// draw_line(l[0],l[1],l[2],'red');
 	// var l = lines[1];
@@ -178,16 +179,17 @@ function draw_tank(pp) {
 	// 	draw_line(l[0],l[1],l[2])
 	// }
 
-	// //health bar
-	// c.beginPath();
-	// var hea = health*3-15
-	// c.moveTo((-15*gcos-10*gsin)*size,(-15*gsin+10*gcos)*size);
-	// c.lineTo((hea*gcos-10*gsin)*size,(hea*gsin+10*gcos)*size);
-	// c.closePath();
-	// c.strokeStyle = 'red';
-	// c.lineWidth = 5*size;
-	// c.stroke()
-
+	//health bar
+	c.beginPath();
+	var hea = health*3-15
+	c.moveTo((-15*gcos-10*gsin)*size,(-15*gsin+10*gcos)*size);
+	c.lineTo((hea*gcos-10*gsin)*size,(hea*gsin+10*gcos)*size);
+	c.closePath();
+	c.strokeStyle = 'red';
+	c.lineWidth = 5*size;
+	c.stroke()
+	
+	c.translate(-pp.x,-pp.y);
 	// //gun_cd bar
 	// c.beginPath();
 	// var cd_b = bu_cd*(-3)+15

@@ -174,6 +174,7 @@ class Tank():
 		self.if_f = False
 		self.team = team
 		self.bu_cd = 10
+		self.health = 10
 		self.lines = get_abc(self.x, self.y, self.facing,50,40)
 		self.data = {}
 		self.data['x'] = self.x
@@ -183,6 +184,7 @@ class Tank():
 		self.data['team'] = self.team
 		self.data['bu_cd'] = self.bu_cd
 		self.data['lines'] = self.lines
+		self.data['health'] = self.health
 	def move(self):
 		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
 		if self.bu_cd > 0:
@@ -206,7 +208,7 @@ class Tank():
 		if self.if_f:
 			if self.bu_cd == 0:
 				self.bu_cd = 10
-				newbullet = Bullet(self.x,self.y,self.facing)
+				newbullet = Bullet(self.x,self.y,self.facing,self)
 				a_bullets.append(newbullet)
 
 		self.lines = get_abc(self.x, self.y, self.facing,50,40)
@@ -214,8 +216,16 @@ class Tank():
 		self.data['y'] = int(self.y)
 		self.data['facing'] = self.facing
 		self.data['lines'] = self.lines
+		self.data['health'] = self.health
 		# print(self.data)
 
+	def health_change(self,h):
+		self.health += h
+		if self.health == 0:
+			self.health = 10
+		elif self.health > 10:
+			self.health = 10
+		print(self.health,self.team)
 
 	def pack(self,action,data):
 		dmsg = {}
@@ -229,13 +239,15 @@ class Tank():
 		pass
 
 class Bullet():
-	def __init__(self,x,y,facing):
+	def __init__(self,x,y,facing,tank):
+		self.tank = tank
 		self.facing = facing
 		self.sin = math.sin(self.facing*math.pi/180)
 		self.cos = math.cos(self.facing*math.pi/180)
 		self.x = x+50*self.sin
 		self.y = y-50*self.cos
 		self.dead = False
+		self.stop = False
 		self.lines = get_abc(self.x, self.y, self.facing,30,10)
 		self.data = {}
 		self.data['x'] = self.x
@@ -244,6 +256,8 @@ class Bullet():
 		# self.data['userid'] = self.userid
 	
 	def move(self):
+		if self.stop:
+			return
 		if self.x >= 1400 or self.x <= 0 or self.y >= 680 or self.y <=0:
 			self.dead = True
 			a_bullets.pop(a_bullets.index(self))
@@ -260,27 +274,34 @@ class Bullet():
 	
 	def if_collide(self):
 		for i in a_tanks:
+			if i == self.tank:
+				continue
 			if_in = if_impact(self.lines, i.lines)
 			
 			if if_in:
-				print('in','266')
+				i.health_change(-1)
+				self.dead = True
+				a_bullets.pop(a_bullets.index(self))
 
 
 def if_impact(line1,line2):
 	# print('line1:',line1)
 	# print('line2:',line2)
-	for i in line1:
-		if i[1] == 0:
-			return False
-	for i in line2:
-		if i[1] == 0:
-			return False
+	# for i in line1:
+	# 	if i[1] == 0:
+	# 		return False
+	# for i in line2:
+	# 	if i[1] == 0:
+	# 		return False
 
 
 	#if line1 in line2
 	def get_xy(l1,l2):
-		x = -(l1[2]-l2[2])/(l1[0]-l2[0])
-		y = l1[0]*x + l1[2]
+		a1,b1,c1 = l1
+		a2,b2,c2 = l2
+		x = (b1*c2-b2*c1)/(b2*a1-b1*a2)
+		y = (a1*c2-a2*c1)/(a2*b1-a1*b2)
+		
 		return (x,y)
 	
 	l11 = line1[0]
@@ -320,32 +341,73 @@ def if_impact(line1,line2):
 	x2min = min(x21,x22,x23,x24)
 	y2max = max(y21,y22,y23,y24)
 	y2min = min(y21,y22,y23,y24)
-	
+	x21 = round(x21,3)
+	x22 = round(x22,3)
+	x23 = round(x23,3)
+	x24 = round(x24,3)
+	y21 = round(y21,3)
+	y22 = round(y22,3)
+	y23 = round(y23,3)
+	y24 = round(y24,3)
+	p2 = [(x21,y21),(x22,y22),(x23,y13),(x24,y24)]
+	# print(x1max,x1min,y1max,y1min,x2max,x2min,y2max,y2min)
+	###################################################### way 1 fail
+	# for i in p1:
+	# 	x = i[0]
+	# 	y = i[1]
+	# 	x2all = []
+	# 	y2all = []
+	# 	for i1 in line2:
+	# 		if i1[1] == 0:
+	# 			yn = -10
+	# 		else:
+	# 			yn = i1[0]*x+i1[2]
+			
+	# 		if yn <= y2max and yn >= y2min:
+	# 			y2all.append(yn)
+
+	# 	for i1 in line2:
+	# 		if i1[0] == 0:
+	# 			xn = -10
+	# 			# print(-1,338)
+	# 		else:
+	# 			xn = (y-i1[2])/i1[0]
+		
+	# 		# print(xn,'xn')
+		
+	# 		if xn <= x2max and xn >= x2min:
+	# 			x2all.append(xn)
+
+	# 	# print(x2max,x2min)
+	# 	if x2all == [] or y2all == []:
+	# 		# print('p1',p1)
+	# 		# print('p2',p2)
+	# 		# print(x2all,y2all)
+	# 		# print('line1:',line1)
+	# 		# print('line2:',line2)
+			
+	# 		continue
+	# 	if x <= max(x2all) and x>= min(x2all) and y<= max(y2all) and y>= min(y2all):
+	# 		print('in')
+	# 		# print('p1',p1)
+	# 		# print('p2',p2)
+	# 		# print(x2all,y2all)
+	# 		return True
+
+	###################################################### way 2
 	for i in p1:
 		x = i[0]
 		y = i[1]
-		x2all = []
-		y2all = []
-		for i1 in line2:
-			yn = i1[0]*x+i1[2]
-			
-			if yn <= y2max and yn >= y2min:
-				y2all.append(yn)
+		i1 = line2[0]
+		c1 = -i1[0]*x-i1[1]*y
+		i2 = line2[1]
 
-		for i1 in line2:
-			xn = (y-i1[2])/i1[0]
-		
-			# print(xn,'xn')
-		
-			if xn <= x2max and xn >= x2min:
-				x2all.append(xn)
-
-		# print(x2max,x2min)
-		if x2all == [] or y2all == []:
-			continue
-		if x <= max(x2all) and x>= min(x2all) and y<= max(y2all) and y>= min(y2all):
+		i3 = line2[2]
+		c2 = -i3[0]*x-i3[1]*y
+		i4 = line2[3]
+		# print(c1,i1[2],i2[2],'c1,c2',c2,i3[2],i4[2],'x,y',x,y)
+		if c1 <= max(i1[2],i2[2]) and c1 >= min(i1[2],i2[2]) and c2 <= max(i3[2],i4[2]) and c2 >= min(i3[2],i4[2]):
 			return True
-
 	return False
 
 
@@ -382,15 +444,6 @@ def get_abc(x,y,facing,l,w):
 		b2 = b1-w/cos1/tan1
 		
 		return [(k1,-1,b1),(k2,-1,b2),(k3,-1,b3),(k4,-1,b4)]
-
-def get_abc_bullet(x,y,facing,l,w):
-	if facing%180 == 90:
-		# ax+by+c = 0
-		li = [(0,1,-y-(w/2)*sin),(0,1,-y+(w/2)*sin),(1,0,-x-(l/2)*sin),(1,0,-x+(l/2)*sin)]
-		return li
-	elif facing%180 == 0:
-		li = [(1,0,-x-(w/2)*cos),(1,0,-x+(w/2)*cos),(0,1,-y+(l/2)*cos),(0,1,-y-(l/2)*cos)]
-		return li
 
 def get_kxy(x1,y1,x2,y2):
 	k = (y1-y2)/(x1-x2)

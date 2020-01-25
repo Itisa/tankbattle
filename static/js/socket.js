@@ -1,6 +1,6 @@
 // var url = 'ws://127.0.0.1:8888'
 
-var url = 'ws://192.168.0.101:8888'
+var url = 'ws://192.168.1.101:8888'
 
 var so = new WebSocket(url);
 var mt;
@@ -10,7 +10,7 @@ so.onmessage = function (event) {
 	// console.log(event)
 	var msg = JSON.parse(event.data);
 	
-	// console.log(msg,'down',msg.data);
+	// console.log(msg,'down',msg.d2ata);
 	
 	if (msg.action=='connected') {
 		ifconnected = true
@@ -37,8 +37,8 @@ so.onmessage = function (event) {
 		// console.log(b_all[1][0])
 		b_all = msg.data[1]
 	}
-	else if (msg.action=='board') {
-		// board = msg.data
+	else if (msg.action=='all_lines') {
+		all_lines = msg.data
 	}
 
 

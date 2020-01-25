@@ -159,16 +159,6 @@ def make_app():
 		static_path=os.path.join(BASE_DIR, "static")
 	)
 
-def get_k(x,y,facing):
-	tan = math.tan(facing*math.pi/180)
-	a = get_kxy(x-y/tan,0,x,y)
-	print(a)
-	pass
-def get_kxy(x1,y1,x2,y2):
-	k = (y1-y2)/(x1-x2)
-	b = (x1*y2-x2*y1)/(x1-x2)
-	return (k,b)
-
 class Tank():
 	def __init__(self,userid,team):
 		self.userid = userid
@@ -184,6 +174,7 @@ class Tank():
 		self.if_f = False
 		self.team = team
 		self.bu_cd = 10
+		self.lines = get_abc(self.x, self.y, self.facing,50,40)
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
@@ -191,7 +182,7 @@ class Tank():
 		self.data['userid'] = self.userid
 		self.data['team'] = self.team
 		self.data['bu_cd'] = self.bu_cd
-	
+		self.data['lines'] = self.lines
 	def move(self):
 		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
 		if self.bu_cd > 0:
@@ -218,9 +209,11 @@ class Tank():
 				newbullet = Bullet(self.x,self.y,self.facing)
 				a_bullets.append(newbullet)
 
+		self.lines = get_abc(self.x, self.y, self.facing,50,40)
 		self.data['x'] = int(self.x)
 		self.data['y'] = int(self.y)
 		self.data['facing'] = self.facing
+		self.data['lines'] = self.lines
 		# print(self.data)
 
 
@@ -243,41 +236,108 @@ class Bullet():
 		self.x = x+50*self.sin
 		self.y = y-50*self.cos
 		self.dead = False
+		self.lines = get_abc(self.x, self.y, self.facing,30,10)
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
 		self.data['facing'] = self.facing
 		# self.data['userid'] = self.userid
+	
 	def move(self):
 		if self.x >= 1400 or self.x <= 0 or self.y >= 680 or self.y <=0:
 			self.dead = True
 			a_bullets.pop(a_bullets.index(self))
 		if self.dead == True:
 			return
+		
 		self.x = self.x+20*self.sin
 		self.y = self.y-20*self.cos
+		self.lines = get_abc(self.x, self.y, self.facing,30,10)
 		self.data['x'] = int(self.x)
 		self.data['y'] = int(self.y)
+		self.data['lines'] = self.lines
 		self.if_collide()
+	
 	def if_collide(self):
-		pass
+		for i in a_tanks:
+			pass
 
-def get_kb(x,y,facing):
-	tan = math.tan(facing*math.pi/180)
+def get_abc(x,y,facing,l,w):
 	cos = math.cos(facing*math.pi/180)
 	sin = math.sin(facing*math.pi/180)
-	if tan == 0:
-		k1,b1 = (round(x),0.0)
+	if facing%180 == 90:
+		a1 = 1
+		b1 = 0
+		c1 = -x
+		a2 = 1
+		b2 = 0
+		c2 = -x+w*sin
+		a3 = 0
+		b3 = 1
+		c3 = -y
+		a4 = 0
+		b4 = 1
+		c4 = -y+l*sin
+		# ax+by+c = 0
+		li = [(0,1,-y-(w/2)*sin),(0,1,-y+(w/2)*sin),(1,0,-x-(l/2)*sin),(1,0,-x+(l/2)*sin)]
+		return li
+	elif facing%180 == 0:
+		li = [(1,0,-x-(w/2)*cos),(1,0,-x+(w/2)*cos),(0,1,-y+(l/2)*cos),(0,1,-y-(l/2)*cos)]
+		return li
 	else:
-		k1,b1 = get_kxy(x-y/tan,0,x,y)
-	k2 = k1
-	b2 = 5/cos+b1
-	k3 = -x/k1
-	b3 = x/k1+y
-	k4 = -x/k1
-	b4 = y-60*sin+(x-60*cos)/k1
+		# tan1 = math.tan(facing*math.pi/180)
+		# tan2 = w/l
+		# tan3 = ((tan1-tan2)/(1+tan1*tan2))
+		
 
-	return [(k1,b1),(k2,b2),(k3,b3),(k4,b4)]
+		# if tan == 0:
+		# 	k1,b1 = (round(x),0.0)
+		# else:
+		# 	k1,b1 = get_kxy(x-y/tan,0,x,y)
+		# k2 = k1
+		# b2 = w/cos+b1
+		# k3 = -x/k1
+		# b3 = x/k1+y
+		# k4 = -x/k1
+		# b4 = y-l*sin+(x-l*cos)/k1
+		# cos2 = l/math.sqrt(w*w+l*l)
+		# cos3 = cos*cos2+
+
+
+		tan1 = math.tan(facing*math.pi/180)
+		tan2 = l/w
+		tan3 = ((tan1-tan2)/(1+tan1*tan2))
+		cos1 = math.cos(facing*math.pi/180)
+		cos2 = w/math.sqrt(w*w+l*l)
+		cos3 = cos1*cos2+tan1*cos1*tan2*cos2
+
+		k,b = get_kxy(x-y/tan3,0,x,y) #对角线(左下—>右上)
+		move_x = math.sqrt(w*w+l*l)/2*cos3
+		move_y = move_x*k
+
+		# poa = (x+move_x,y+move_y)  #position a
+		xa = x+move_x
+		ya = y+move_y
+		k3,b3 = get_kxy(xa-ya/tan1,0,xa,ya)
+		k4 = k3
+		b4 = b3+l/cos1
+		k1 = 0
+		b1 = 0
+		k2 = 0
+		b2 = 0
+		
+		# return [(1,0,-20),(1,0,-30),(k3,-1,b3),(k4,-1,b4)]
+		return [(k1,-1,b1),(k2,-1,b2),(k3,-1,b3),(k4,-1,b4)]
+
+def get_abc_bullet(x,y,facing,l,w):
+	if facing%180 == 90:
+		# ax+by+c = 0
+		li = [(0,1,-y-(w/2)*sin),(0,1,-y+(w/2)*sin),(1,0,-x-(l/2)*sin),(1,0,-x+(l/2)*sin)]
+		return li
+	elif facing%180 == 0:
+		li = [(1,0,-x-(w/2)*cos),(1,0,-x+(w/2)*cos),(0,1,-y+(l/2)*cos),(0,1,-y-(l/2)*cos)]
+		return li
+
 def get_kxy(x1,y1,x2,y2):
 	k = (y1-y2)/(x1-x2)
 	b = (x1*y2-x2*y1)/(x1-x2)
@@ -307,6 +367,7 @@ if __name__ == "__main__":
 	a_onlineusers = []
 	a_tanks = []
 	a_bullets = []
+	a_lines = []
 	app.listen(8888)
 	tornado.ioloop.IOLoop.current().spawn_callback(time_loop)
 	tornado.ioloop.IOLoop.current().start()

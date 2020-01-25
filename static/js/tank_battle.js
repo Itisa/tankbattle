@@ -159,14 +159,16 @@ function draw_tank(pp) {
 	c.translate(-pp.x,-pp.y);
 	//lines
 	// console.log(lines)
-	var l = lines[0];
-	draw_line(l[0],l[1],l[2],'red');
-	var l = lines[1];
-	draw_line(l[0],l[1],l[2],'yellow');
-	var l = lines[2];
-	draw_line(l[0],l[1],l[2],'blue');
-	var l = lines[3];
-	draw_line(l[0],l[1],l[2],'green');
+	
+	// var l = lines[0];
+	// draw_line(l[0],l[1],l[2],'red');
+	// var l = lines[1];
+	// draw_line(l[0],l[1],l[2],'yellow');
+	// var l = lines[2];
+	// draw_line(l[0],l[1],l[2],'blue');
+	// var l = lines[3];
+	// draw_line(l[0],l[1],l[2],'green');
+
 	// console.log(lines[0])
 	// draw_line(1,-1,0)
 	// draw_line(1,0,-100)
@@ -223,20 +225,21 @@ function draw_bullet(x,y,sin,cos,lines,lent=30,team='red') {
 	c.strokeStyle = team;
 	c.lineWidth = 5*size;
 	c.stroke();
-	c.beginPath();
-	c.moveTo(0,0);
-	c.lineTo(10,0);
-	c.strokeStyle = 'black';
-	c.stroke();
+	// c.beginPath();
+	// c.moveTo(0,0);
+	// c.lineTo(10,0);
+	// c.strokeStyle = 'black';
+	// c.stroke();
 	c.translate(-x,-y);
-	var l = lines[0];
-	draw_line(l[0],l[1],l[2],'red');
-	var l = lines[1];
-	draw_line(l[0],l[1],l[2],'yellow');
-	var l = lines[2];
-	draw_line(l[0],l[1],l[2],'blue');
-	var l = lines[3];
-	draw_line(l[0],l[1],l[2],'green');
+
+	// var l = lines[0];
+	// draw_line(l[0],l[1],l[2],'red');
+	// var l = lines[1];
+	// draw_line(l[0],l[1],l[2],'yellow');
+	// var l = lines[2];
+	// draw_line(l[0],l[1],l[2],'blue');
+	// var l = lines[3];
+	// draw_line(l[0],l[1],l[2],'green');
 }
 
 function draw_text() {

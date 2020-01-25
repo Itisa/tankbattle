@@ -260,50 +260,105 @@ class Bullet():
 	
 	def if_collide(self):
 		for i in a_tanks:
-			pass
+			if_in = if_impact(self.lines, i.lines)
+			
+			if if_in:
+				print('in','266')
+
+
+def if_impact(line1,line2):
+	# print('line1:',line1)
+	# print('line2:',line2)
+	for i in line1:
+		if i[1] == 0:
+			return False
+	for i in line2:
+		if i[1] == 0:
+			return False
+
+
+	#if line1 in line2
+	def get_xy(l1,l2):
+		x = -(l1[2]-l2[2])/(l1[0]-l2[0])
+		y = l1[0]*x + l1[2]
+		return (x,y)
+	
+	l11 = line1[0]
+	l12 = line1[1]
+	l13 = line1[2]
+	l14 = line1[3]
+	x11,y11 = get_xy(l11,l13)
+	x12,y12 = get_xy(l12,l13)
+	x13,y13 = get_xy(l11,l14)
+	x14,y14 = get_xy(l12,l14)
+	x11 = round(x11,3)
+	x12 = round(x12,3)
+	x13 = round(x13,3)
+	x14 = round(x14,3)
+	y11 = round(y11,3)
+	y12 = round(y12,3)
+	y13 = round(y13,3)
+	y14 = round(y14,3)
+	
+	p1 = [(x11,y11),(x12,y12),(x13,y13),(x14,y14)]
+	# print(p1)
+	x1max = max(x11,x12,x13,x14)
+	x1min = min(x11,x12,x13,x14)
+	y1max = max(y11,y12,y13,y14)
+	y1min = min(y11,y12,y13,y14)
+	
+
+	l21 = line2[0]
+	l22 = line2[1]
+	l23 = line2[2]
+	l24 = line2[3]
+	x21,y21 = get_xy(l21,l23)
+	x22,y22 = get_xy(l22,l23)
+	x23,y23 = get_xy(l21,l24)
+	x24,y24 = get_xy(l22,l24)
+	x2max = max(x21,x22,x23,x24)
+	x2min = min(x21,x22,x23,x24)
+	y2max = max(y21,y22,y23,y24)
+	y2min = min(y21,y22,y23,y24)
+	
+	for i in p1:
+		x = i[0]
+		y = i[1]
+		x2all = []
+		y2all = []
+		for i1 in line2:
+			yn = i1[0]*x+i1[2]
+			
+			if yn <= y2max and yn >= y2min:
+				y2all.append(yn)
+
+		for i1 in line2:
+			xn = (y-i1[2])/i1[0]
+		
+			# print(xn,'xn')
+		
+			if xn <= x2max and xn >= x2min:
+				x2all.append(xn)
+
+		# print(x2max,x2min)
+		if x2all == [] or y2all == []:
+			continue
+		if x <= max(x2all) and x>= min(x2all) and y<= max(y2all) and y>= min(y2all):
+			return True
+
+	return False
+
 
 def get_abc(x,y,facing,l,w):
 	cos = math.cos(facing*math.pi/180)
 	sin = math.sin(facing*math.pi/180)
 	if facing%180 == 90:
-		a1 = 1
-		b1 = 0
-		c1 = -x
-		a2 = 1
-		b2 = 0
-		c2 = -x+w*sin
-		a3 = 0
-		b3 = 1
-		c3 = -y
-		a4 = 0
-		b4 = 1
-		c4 = -y+l*sin
-		# ax+by+c = 0
-		li = [(0,1,-y-(w/2)*sin),(0,1,-y+(w/2)*sin),(1,0,-x-(l/2)*sin),(1,0,-x+(l/2)*sin)]
+		li = [(0,-1,y+(w/2)*sin),(0,-1,y-(w/2)*sin),(1,0,-x-(l/2)*sin),(1,0,-x+(l/2)*sin)]
 		return li
 	elif facing%180 == 0:
-		li = [(1,0,-x-(w/2)*cos),(1,0,-x+(w/2)*cos),(0,1,-y+(l/2)*cos),(0,1,-y-(l/2)*cos)]
+		li = [(1,0,-x-(w/2)*cos),(1,0,-x+(w/2)*cos),(0,-1,y-(l/2)*cos),(0,-1,y+(l/2)*cos)]
 		return li
 	else:
-		# tan1 = math.tan(facing*math.pi/180)
-		# tan2 = w/l
-		# tan3 = ((tan1-tan2)/(1+tan1*tan2))
-		
-
-		# if tan == 0:
-		# 	k1,b1 = (round(x),0.0)
-		# else:
-		# 	k1,b1 = get_kxy(x-y/tan,0,x,y)
-		# k2 = k1
-		# b2 = w/cos+b1
-		# k3 = -x/k1
-		# b3 = x/k1+y
-		# k4 = -x/k1
-		# b4 = y-l*sin+(x-l*cos)/k1
-		# cos2 = l/math.sqrt(w*w+l*l)
-		# cos3 = cos*cos2+
-
-
 		tan1 = math.tan(facing*math.pi/180)
 		tan2 = l/w
 		tan3 = ((tan1-tan2)/(1+tan1*tan2))
@@ -321,12 +376,11 @@ def get_abc(x,y,facing,l,w):
 		k3,b3 = get_kxy(xa-ya/tan1,0,xa,ya)
 		k4 = k3
 		b4 = b3+l/cos1
-		k1 = 0
-		b1 = 0
-		k2 = 0
-		b2 = 0
+		k1 = -1/k3
+		b1 = ya+xa/k3
+		k2 = k1
+		b2 = b1-w/cos1/tan1
 		
-		# return [(1,0,-20),(1,0,-30),(k3,-1,b3),(k4,-1,b4)]
 		return [(k1,-1,b1),(k2,-1,b2),(k3,-1,b3),(k4,-1,b4)]
 
 def get_abc_bullet(x,y,facing,l,w):

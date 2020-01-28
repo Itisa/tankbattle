@@ -7,7 +7,7 @@ var ifconnected = false
 // var mt = new Tank(1,'321',200,300,330,'red')
 var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20,200],[1,450,200,20,200],[1,600,300,20,300],[1,700,200,100,20],[1,800,400,20,150],[1,950,300,300,20]]
 var bx = new Bullet(0,0,0,0,true)
-var p_all=[],b_all = [bx]
+var p_all=[],b_all = [bx],w_all = []
 var text = [['hello','blue','hi','red',100]],talk=[];
 //x,y,facing,jx,jy
 
@@ -47,7 +47,7 @@ function postkey(method,key) {
 
 function init() {
 	if (if_begin==false) {
-		sett = setInterval(time,50);
+		sett = setInterval(time,25);
 		if_begin=true;
 	}
 }
@@ -83,24 +83,6 @@ function clean_board() {
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
 	c.clearRect(0,0,1425,1000)
-}
-
-function draw_map() {
-	var canvas = document.getElementById('main');
-	var c = canvas.getContext("2d");
-	c.fillStyle = 'black'
-	for (var i = 0; i < map1.length; i++) {
-		var wall = map1[i];
-		// c.beginPath();
-		if (wall[0]==1) {
-			c.fillRect(wall[1],wall[2],wall[3],wall[4]);
-			c.stroke();
-		}
-		if (wall[0]==2) {
-			c.beginPath();
-			c.moveTo(wall[0])
-		}
-	}
 }
 
 function draw_tank(pp) {
@@ -188,7 +170,7 @@ function draw_tank(pp) {
 	c.strokeStyle = 'red';
 	c.lineWidth = 5*size;
 	c.stroke()
-	
+
 	c.translate(-pp.x,-pp.y);
 	// //gun_cd bar
 	// c.beginPath();
@@ -202,36 +184,32 @@ function draw_tank(pp) {
 
 }
 
-function draw_bullet(x,y,sin,cos,lines,lent=30,team='red') {
+function draw_bullet(bb) {
+
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
+
+	var x = bb.x ,y=bb.y
+	var team = bb.team
+	var sin = Math.sin(bb.facing*Math.PI/180);
+	var cos = Math.cos(bb.facing*Math.PI/180);
+
 	c.translate(x,y);
 	c.beginPath();
 	////x' = x*cos - y*sin
 	////y' = x*sin + y*cos
 	var l = 15
-	c.moveTo((-5/2*cos+l*sin)*size, (-5/2*sin-l*cos)*size);
-	c.lineTo((5/2*cos+l*sin)*size, (5/2*sin-l*cos)*size);
-	c.lineTo((5/2*cos-l*sin)*size, (5/2*sin+l*cos)*size);
-	c.lineTo((-5/2*cos-l*sin)*size, (-5/2*sin+l*cos)*size);
-	
-
-	// c.moveTo((5/2*cos)*size,(5/2*sin)*size);
-	// c.lineTo((5/2*cos-30*sin)*size,(5/2*sin+30*cos)*size);
-	// c.lineTo((-30*sin)*size,(30*cos)*size);
-	// c.lineTo(0,0);
-	// c.moveTo(0,0);
-	// c.lineTo(-(30*sin)*size,(30*cos)*size);
+	var w = 5/2
+	c.moveTo((-w*cos+l*sin)*size, (-w*sin-l*cos)*size);
+	c.lineTo((w*cos+l*sin)*size, (w*sin-l*cos)*size);
+	c.lineTo((w*cos-l*sin)*size, (w*sin+l*cos)*size);
+	c.lineTo((-w*cos-l*sin)*size, (-w*sin+l*cos)*size);
 	
 	c.closePath();
 	c.strokeStyle = team;
 	c.lineWidth = 5*size;
 	c.stroke();
-	// c.beginPath();
-	// c.moveTo(0,0);
-	// c.lineTo(10,0);
-	// c.strokeStyle = 'black';
-	// c.stroke();
+
 	c.translate(-x,-y);
 
 	// var l = lines[0];
@@ -274,18 +252,21 @@ function draw_text() {
 		var t = talk[i]
 		// text,userid,team
 		draw_talk(1200,200+20*i,t[0],t[1],t[2])
+		t[3] -= 1
+		if (t[3]<=0) {talk.splice(i,1)}
 	}
 
 
 	
 }
 
-function draw_talk(x,y,text,userid,team) {
+function draw_talk(x,y,text,username,team) {
+
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
 	c.font = "20px bold 黑体";
 	c.fillStyle = team;
-	var t = userid+':'+text
+	var t = username+':'+text
 	c.fillText(text,x,y)
 }
 
@@ -294,7 +275,7 @@ function draw_line(m,n,o,colour='black') {
 	// console.log(m,n,o)
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
-	// c.translate(0,0);
+
 	c.beginPath();
 	
 	if (n == 0) {
@@ -308,11 +289,46 @@ function draw_line(m,n,o,colour='black') {
 	c.strokeStyle = colour
 	c.lineWidth = 2;
 	c.stroke();
-	// c.translate(0,0)
-
 
 }
 
+function draw_map() {
+	for (var i = 0; i < w_all.length; i++) {
+		var ww = w_all[i];
+		draw_wall(ww)
+
+	}
+
+}
+
+function draw_wall(ww) {
+	//x,y,facing,l,w
+	var can = document.getElementById('main');
+	var c = can.getContext("2d");
+	c.translate(ww[0],ww[1]);
+
+	var sin = Math.sin(ww[2]*Math.PI/180);
+	var cos = Math.cos(ww[2]*Math.PI/180);
+	var l=ww[3]/2, w=ww[4]/2;
+	c.beginPath();
+	c.moveTo((-w*cos+l*sin)*size, (-w*sin-l*cos)*size);
+	c.lineTo((w*cos+l*sin)*size, (w*sin-l*cos)*size);
+	c.lineTo((w*cos-l*sin)*size, (w*sin+l*cos)*size);
+	c.lineTo((-w*cos-l*sin)*size, (-w*sin+l*cos)*size);
+	c.closePath();
+	if (ww[5]==1) {
+		c.strokeStyle = 'black';
+		c.stroke();
+	}
+	else {
+		c.fillStyle = 'black';
+		c.fill();
+	}
+	
+	c.translate(-ww[0],-ww[1])
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 function draw_board(bo) {
 	// console.log(bo)
 	var can = document.getElementById('main');
@@ -336,12 +352,16 @@ function draw_board(bo) {
 				c.lineWidth = 2;
 				c.stroke();
 				c.translate(-i,-i1);
-			}
-			
+			}	
 		}
-	
-
 	}
+}
+////////////////////////////////////////////////////////////////////////////////////
+
+function post_userinfo() {
+	username = document.getElementById('get_username').value
+	password = document.getElementById('password').value
+	pack_post('login',[username,password])
 }
 
 function talk_post() {
@@ -352,7 +372,7 @@ function talk_post() {
 	}
 	else {
 		data['text'] = text
-		data['userid'] = myuserid
+		data['username'] = myusername
 		onmsg = pack('talk_up',data)
 		postdata(onmsg)
 		document.getElementById('talk').value = ''
@@ -365,22 +385,18 @@ function talk(ev) {
 
 
 function time() {
-	// gt+=1;
 	clean_board()
 	// console.log(p_all)
-	// draw_map()
 	draw_text()
-	// draw_board(board)
+	draw_map()
 
 
 	// console.log('in',b_all)
 	for (var i = b_all.length - 1; i >= 0; i--) {
 		var bb = b_all[i];
 		// if (bb.stop==true) {continue;}
-		var sin = Math.sin(bb.facing*Math.PI/180);
-		var cos = Math.cos(bb.facing*Math.PI/180);
 		// console.log(bb.x, bb.y, sin, cos)
-		draw_bullet(bb.x, bb.y, sin, cos, bb.lines);
+		draw_bullet(bb);
 	}
 	
 	for (var i = 0; i < p_all.length; i++) {
@@ -427,7 +443,7 @@ function keydown(ev) {
 	case 88://x
 		if_e = 1;
 		break;
-	case 13:
+	case 13://enter
 		talk_post()
 		break;
 	}
@@ -500,5 +516,5 @@ function adjustCanvas(canvas, context) {
     context.scale(ratio, ratio);
 }
 
-wait()
+// wait()
 // init()

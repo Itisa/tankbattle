@@ -31,6 +31,8 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		self.userid = -1
 		self.tank = -1
 		self.team = 'red'
+		self.init = False
+		self.username = 'None'
 		a_apps.append(self)
 	
 	def check_origin(self,origin):
@@ -38,11 +40,6 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 
 	def open(self):
 		print("WebSocket opened")
-		while 1:
-			self.userid = random.randint(1,100000)
-			if self.userid in a_onlineusers:
-				continue
-			break
 		
 		if len(a_apps)%2 == 0:
 			self.team = 'red'
@@ -50,20 +47,29 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 			self.team = 'blue'
 		# self.userid = len(a_onlineusers)+1
 
-		a_onlineusers.append(self.userid)
-		print(a_onlineusers,a_tanks)
 		cmsg = self.pack('connected','')
 		self.write_message(cmsg)
 		######################### write connected
-		
-		umsg = self.pack('youruserid',{'userid':self.userid})
+
+##############################################################################################################################
+		while 1:
+			self.userid = random.randint(1,100000)
+			if self.userid in a_onlineusers:
+				continue
+			break	
+		a_onlineusers.append(self.userid)
+
+		umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
 		self.write_message(umsg)
 		######################tell the userid
 
+		
 		nt = Tank(self.userid,self.team)
 		self.tank = nt
 		a_tanks.append(nt)
 		######################create a new Tank
+
+
 		
 		alldata = []
 		for i in a_tanks:
@@ -72,6 +78,12 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		self.write_message(omsg)
 		######################tell the online users
 
+		mmsg = self.pack('map',ori_map)
+		self.write_message(mmsg)
+		######################down the map
+
+##############################################################################################################################
+
 	def on_message(self, message):
 		# cobj.onmsg(message)
 		msg = json.loads(message)
@@ -79,9 +91,53 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		
 		act = msg['action']
 		data = msg['data']
+
+		# print('message',message,nt)
+		
+		if act == 'login':
+			for i in a_apps:
+				if i.username == data:
+					umsg = self.pack('logerror','username has been used')
+					self.write_message(umsg)
+					return 
+			
+##############################################################################################################################
+			# self.username = data
+			# while 1:
+			# 	self.userid = random.randint(1,100000)
+			# 	if self.userid in a_onlineusers:
+			# 		continue
+			# 	break	
+			# a_onlineusers.append(self.userid)
+			# print(a_onlineusers,a_tanks)
+			
+			# umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
+			# self.write_message(umsg)
+			# ######################tell the userid
+
+			
+			# nt = Tank(self.userid,self.team)
+			# self.tank = nt
+			# a_tanks.append(nt)
+			# ######################create a new Tank
+
+
+			
+			# alldata = []
+			# for i in a_tanks:
+			# 	alldata.append(i.data)
+			# omsg = self.pack('onlineuser',alldata)
+			# self.write_message(omsg)
+			# ######################tell the online users
+
+			# mmsg = self.pack('map',a_walls)
+			# self.write_message(mmsg)
+			# ######################down the map
+
+##############################################################################################################################
 		index = a_onlineusers.index(self.userid)
 		nt = a_tanks[index]
-		# print('message',message,nt)
+		
 		if act == 'new_tank_come':
 			pass
 		
@@ -112,7 +168,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 			print('talk',data)
 			dictdown = {}
 			dictdown['text'] = data['text']
-			dictdown['userid'] = self.userid
+			dictdown['username'] = self.username
 			dictdown['team'] = self.team
 			dmsg = self.pack('talk_down',dictdown)
 			for i in a_apps:
@@ -123,7 +179,8 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		index = a_onlineusers.index(self.userid)
 		hii = a_tanks.pop(index)
 		hi = a_onlineusers.pop(index)
-		print(hi,hii.data)
+		h = a_apps.pop(index)
+		print('on_close',hi,hii.data)
 		print("WebSocket closed")
 
 	def pack(self,action,data):
@@ -143,12 +200,6 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		omsg = self.pack('move_all',alldata)
 		self.write_message(omsg)
 
-
-	def move(self):
-		index = a_onlineusers.index(self.userid)
-		nt = a_tanks[index]
-		nt.move()
-
 def make_app():
 	return tornado.web.Application(
 		[
@@ -162,9 +213,14 @@ def make_app():
 class Tank():
 	def __init__(self,userid,team):
 		self.userid = userid
-		self.x = random.randint(1,1400)
-		self.y = random.randint(1,700)
 		self.facing = 0
+		while True:
+			self.x = random.randint(1,1400)
+			self.y = random.randint(1,700)
+			self.lines = get_abc(self.x, self.y, self.facing,50,40)
+			if not self.if_collide():
+				break
+
 		self.sin = math.sin(self.facing*math.pi/180)
 		self.cos = math.sin(self.facing*math.pi/180)
 		self.if_w = False
@@ -175,20 +231,35 @@ class Tank():
 		self.team = team
 		self.bu_cd = 10
 		self.health = 10
-		self.lines = get_abc(self.x, self.y, self.facing,50,40)
+		self.turnspeed = 5
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
 		self.data['facing'] = self.facing
 		self.data['userid'] = self.userid
 		self.data['team'] = self.team
-		self.data['bu_cd'] = self.bu_cd
+		# self.data['bu_cd'] = self.bu_cd
 		self.data['lines'] = self.lines
 		self.data['health'] = self.health
 	def move(self):
 		# print('move',self.if_w,self.if_s,self.if_a,self.if_d)
 		if self.bu_cd > 0:
 			self.bu_cd -= 1
+				
+		if self.if_f:
+			if self.bu_cd == 0:
+				self.bu_cd = 10
+				newbullet = Bullet(self)
+
+		if not(self.if_a and self.if_d):
+			if self.if_d:
+				self.facing += self.turnspeed
+			elif self.if_a:
+				self.facing -= self.turnspeed
+
+			self.sin = math.sin(self.facing*math.pi/180)
+			self.cos = math.cos(self.facing*math.pi/180)
+
 		if not(self.if_w and self.if_s):
 			if self.if_w:
 				self.x = self.x+10*self.sin
@@ -196,20 +267,29 @@ class Tank():
 			elif self.if_s:
 				self.x = self.x-10*self.sin
 				self.y = self.y+10*self.cos
-		if not(self.if_a and self.if_d):
-			if self.if_d:
-				self.facing += 10
-			elif self.if_a:
-				self.facing -= 10
+		
+		
+		self.lines = get_abc(self.x, self.y, self.facing,50,40)
+		if self.if_collide():
+
+			if not(self.if_w and self.if_s):
+				if self.if_w:
+					self.x = self.x-10*self.sin
+					self.y = self.y+10*self.cos
+				elif self.if_s:
+					self.x = self.x+10*self.sin
+					self.y = self.y-10*self.cos
+
+
+			if not(self.if_a and self.if_d):
+				if self.if_d:
+					self.facing -= self.turnspeed
+				elif self.if_a:
+					self.facing += self.turnspeed
 
 			self.sin = math.sin(self.facing*math.pi/180)
 			self.cos = math.cos(self.facing*math.pi/180)
-				
-		if self.if_f:
-			if self.bu_cd == 0:
-				self.bu_cd = 10
-				newbullet = Bullet(self.x,self.y,self.facing,self)
-				a_bullets.append(newbullet)
+		
 
 		self.lines = get_abc(self.x, self.y, self.facing,50,40)
 		self.data['x'] = int(self.x)
@@ -223,10 +303,33 @@ class Tank():
 		self.health += h
 		if self.health == 0:
 			self.health = 10
+			self.facing = 0
+			
+			while True:
+				self.x = random.randint(1,1400)
+				self.y = random.randint(1,700)
+				self.lines = get_abc(self.x, self.y, self.facing,50,40)
+				if not self.if_collide():
+					break
+
 		elif self.health > 10:
 			self.health = 10
-		print(self.health,self.team)
-
+	
+	def if_collide(self):
+		for i in a_tanks:
+			if i == self:
+				continue
+			if_in = if_impact(self.lines,i.lines)
+			if if_in:
+				return True
+		
+		for i in a_walls:
+			if_in = if_impact(self.lines,i)
+			if if_in:
+				return True
+		
+		return False
+ 
 	def pack(self,action,data):
 		dmsg = {}
 		dmsg['action'] = action
@@ -239,33 +342,35 @@ class Tank():
 		pass
 
 class Bullet():
-	def __init__(self,x,y,facing,tank):
+	def __init__(self,tank):
 		self.tank = tank
-		self.facing = facing
+		self.facing = tank.facing
 		self.sin = math.sin(self.facing*math.pi/180)
 		self.cos = math.cos(self.facing*math.pi/180)
-		self.x = x+50*self.sin
-		self.y = y-50*self.cos
+		self.x = tank.x+50*self.sin
+		self.y = tank.y-50*self.cos
+		self.team = tank.team
 		self.dead = False
 		self.stop = False
-		self.lines = get_abc(self.x, self.y, self.facing,30,10)
+		self.lines = get_abc(self.x, self.y, self.facing,30,5)
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
 		self.data['facing'] = self.facing
+		self.data['team'] = self.team
+		a_bullets.append(self)
+		self.if_collide()
 		# self.data['userid'] = self.userid
 	
 	def move(self):
 		if self.stop:
 			return
-		if self.x >= 1400 or self.x <= 0 or self.y >= 680 or self.y <=0:
-			self.dead = True
-			a_bullets.pop(a_bullets.index(self))
+
 		if self.dead == True:
 			return
 		
-		self.x = self.x+20*self.sin
-		self.y = self.y-20*self.cos
+		self.x = self.x+50*self.sin
+		self.y = self.y-50*self.cos
 		self.lines = get_abc(self.x, self.y, self.facing,30,10)
 		self.data['x'] = int(self.x)
 		self.data['y'] = int(self.y)
@@ -282,28 +387,25 @@ class Bullet():
 				i.health_change(-1)
 				self.dead = True
 				a_bullets.pop(a_bullets.index(self))
+				return
+		
+		for i in a_walls:
+			if_in = if_impact(self.lines,i)
+			if if_in:
+				self.dead = True
+				a_bullets.pop(a_bullets.index(self))
+				return
 
 
 def if_impact(line1,line2):
-	# print('line1:',line1)
-	# print('line2:',line2)
-	# for i in line1:
-	# 	if i[1] == 0:
-	# 		return False
-	# for i in line2:
-	# 	if i[1] == 0:
-	# 		return False
-
-
-	#if line1 in line2
+	
 	def get_xy(l1,l2):
 		a1,b1,c1 = l1
 		a2,b2,c2 = l2
 		x = (b1*c2-b2*c1)/(b2*a1-b1*a2)
 		y = (a1*c2-a2*c1)/(a2*b1-a1*b2)
-		
 		return (x,y)
-	
+
 	l11 = line1[0]
 	l12 = line1[1]
 	l13 = line1[2]
@@ -322,12 +424,10 @@ def if_impact(line1,line2):
 	y14 = round(y14,3)
 	
 	p1 = [(x11,y11),(x12,y12),(x13,y13),(x14,y14)]
-	# print(p1)
-	x1max = max(x11,x12,x13,x14)
-	x1min = min(x11,x12,x13,x14)
-	y1max = max(y11,y12,y13,y14)
-	y1min = min(y11,y12,y13,y14)
-	
+
+	for m,n in p1:
+		if m>=1425 or m<=0 or n>=680 or n<=0:
+			return True
 
 	l21 = line2[0]
 	l22 = line2[1]
@@ -337,10 +437,6 @@ def if_impact(line1,line2):
 	x22,y22 = get_xy(l22,l23)
 	x23,y23 = get_xy(l21,l24)
 	x24,y24 = get_xy(l22,l24)
-	x2max = max(x21,x22,x23,x24)
-	x2min = min(x21,x22,x23,x24)
-	y2max = max(y21,y22,y23,y24)
-	y2min = min(y21,y22,y23,y24)
 	x21 = round(x21,3)
 	x22 = round(x22,3)
 	x23 = round(x23,3)
@@ -349,52 +445,8 @@ def if_impact(line1,line2):
 	y22 = round(y22,3)
 	y23 = round(y23,3)
 	y24 = round(y24,3)
-	p2 = [(x21,y21),(x22,y22),(x23,y13),(x24,y24)]
-	# print(x1max,x1min,y1max,y1min,x2max,x2min,y2max,y2min)
-	###################################################### way 1 fail
-	# for i in p1:
-	# 	x = i[0]
-	# 	y = i[1]
-	# 	x2all = []
-	# 	y2all = []
-	# 	for i1 in line2:
-	# 		if i1[1] == 0:
-	# 			yn = -10
-	# 		else:
-	# 			yn = i1[0]*x+i1[2]
-			
-	# 		if yn <= y2max and yn >= y2min:
-	# 			y2all.append(yn)
+	p2 = [(x21,y21),(x22,y22),(x23,y23),(x24,y24)]
 
-	# 	for i1 in line2:
-	# 		if i1[0] == 0:
-	# 			xn = -10
-	# 			# print(-1,338)
-	# 		else:
-	# 			xn = (y-i1[2])/i1[0]
-		
-	# 		# print(xn,'xn')
-		
-	# 		if xn <= x2max and xn >= x2min:
-	# 			x2all.append(xn)
-
-	# 	# print(x2max,x2min)
-	# 	if x2all == [] or y2all == []:
-	# 		# print('p1',p1)
-	# 		# print('p2',p2)
-	# 		# print(x2all,y2all)
-	# 		# print('line1:',line1)
-	# 		# print('line2:',line2)
-			
-	# 		continue
-	# 	if x <= max(x2all) and x>= min(x2all) and y<= max(y2all) and y>= min(y2all):
-	# 		print('in')
-	# 		# print('p1',p1)
-	# 		# print('p2',p2)
-	# 		# print(x2all,y2all)
-	# 		return True
-
-	###################################################### way 2
 	for i in p1:
 		x = i[0]
 		y = i[1]
@@ -405,6 +457,20 @@ def if_impact(line1,line2):
 		i3 = line2[2]
 		c2 = -i3[0]*x-i3[1]*y
 		i4 = line2[3]
+		# print(c1,i1[2],i2[2],'c1,c2',c2,i3[2],i4[2],'x,y',x,y)
+		if c1 <= max(i1[2],i2[2]) and c1 >= min(i1[2],i2[2]) and c2 <= max(i3[2],i4[2]) and c2 >= min(i3[2],i4[2]):
+			return True
+	
+	for i in p2:
+		x = i[0]
+		y = i[1]
+		i1 = line1[0]
+		c1 = -i1[0]*x-i1[1]*y
+		i2 = line1[1]
+
+		i3 = line1[2]
+		c2 = -i3[0]*x-i3[1]*y
+		i4 = line1[3]
 		# print(c1,i1[2],i2[2],'c1,c2',c2,i3[2],i4[2],'x,y',x,y)
 		if c1 <= max(i1[2],i2[2]) and c1 >= min(i1[2],i2[2]) and c2 <= max(i3[2],i4[2]) and c2 >= min(i3[2],i4[2]):
 			return True
@@ -452,9 +518,24 @@ def get_kxy(x1,y1,x2,y2):
 	b = round(b,10)
 	return (k,b)
 
+def read_map(file='maps.txt'):
+	ifhave=os.path.exists('maps.txt')
+	if not ifhave:
+		return False
+	with open('maps.txt','r') as f:
+		j = f.read()
+		walls = json.loads(j)
+		for i in walls:
+			ori_map.append(i)
+			if i[-1]==1:
+				continue
+			lines = get_abc(i[0],i[1],i[2],i[3],i[4])
+			a_walls.append(lines)
+		f.close()
+
 async def time_loop():
 	while True:
-		nxt = tornado.gen.sleep(0.05)   # Start the clock.
+		nxt = tornado.gen.sleep(0.025)   # Start the clock.
 		await pertime()  # Run while the clock is ticking.
 		await nxt
 
@@ -474,7 +555,10 @@ if __name__ == "__main__":
 	a_onlineusers = []
 	a_tanks = []
 	a_bullets = []
+	a_walls = []
 	a_lines = []
+	ori_map = []
+	read_map()
 	app.listen(8888)
 	tornado.ioloop.IOLoop.current().spawn_callback(time_loop)
 	tornado.ioloop.IOLoop.current().start()

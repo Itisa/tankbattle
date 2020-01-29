@@ -215,8 +215,8 @@ class Tank():
 		self.userid = userid
 		self.facing = 0
 		while True:
-			self.x = random.randint(1,1400)
-			self.y = random.randint(1,700)
+			self.x = random.randint(1,1425*2)
+			self.y = random.randint(1,680*2)
 			self.lines = get_abc(self.x, self.y, self.facing,50,40)
 			if not self.if_collide():
 				break
@@ -306,8 +306,8 @@ class Tank():
 			self.facing = 0
 			
 			while True:
-				self.x = random.randint(1,1400)
-				self.y = random.randint(1,700)
+				self.x = random.randint(1,1425*2)
+				self.y = random.randint(1,680*2)
 				self.lines = get_abc(self.x, self.y, self.facing,50,40)
 				if not self.if_collide():
 					break
@@ -327,6 +327,9 @@ class Tank():
 			if_in = if_impact(self.lines,i)
 			if if_in:
 				return True
+
+		if if_out(self.lines):
+			return True
 		
 		return False
  
@@ -396,6 +399,12 @@ class Bullet():
 				a_bullets.pop(a_bullets.index(self))
 				return
 
+		if if_out(self.lines):
+			self.dead = True
+			a_bullets.pop(a_bullets.index(self))
+			return
+
+
 
 def if_impact(line1,line2):
 	
@@ -425,9 +434,6 @@ def if_impact(line1,line2):
 	
 	p1 = [(x11,y11),(x12,y12),(x13,y13),(x14,y14)]
 
-	for m,n in p1:
-		if m>=1425 or m<=0 or n>=680 or n<=0:
-			return True
 
 	l21 = line2[0]
 	l22 = line2[1]
@@ -476,6 +482,38 @@ def if_impact(line1,line2):
 			return True
 	return False
 
+def if_out(line):
+
+	def get_xy(l1,l2):
+		a1,b1,c1 = l1
+		a2,b2,c2 = l2
+		x = (b1*c2-b2*c1)/(b2*a1-b1*a2)
+		y = (a1*c2-a2*c1)/(a2*b1-a1*b2)
+		return (x,y)
+
+	l11 = line[0]
+	l12 = line[1]
+	l13 = line[2]
+	l14 = line[3]
+	x11,y11 = get_xy(l11,l13)
+	x12,y12 = get_xy(l12,l13)
+	x13,y13 = get_xy(l11,l14)
+	x14,y14 = get_xy(l12,l14)
+	x11 = round(x11,3)
+	x12 = round(x12,3)
+	x13 = round(x13,3)
+	x14 = round(x14,3)
+	y11 = round(y11,3)
+	y12 = round(y12,3)
+	y13 = round(y13,3)
+	y14 = round(y14,3)
+	
+	p1 = [(x11,y11),(x12,y12),(x13,y13),(x14,y14)]
+
+	for m,n in p1:
+		if m>=mapx or m<=0 or n>=mapy or n<=0:
+			return True
+	return False
 
 def get_abc(x,y,facing,l,w):
 	cos = math.cos(facing*math.pi/180)
@@ -559,6 +597,8 @@ if __name__ == "__main__":
 	a_lines = []
 	ori_map = []
 	read_map()
+	mapx = 2850
+	mapy = 1360
 	app.listen(8888)
 	tornado.ioloop.IOLoop.current().spawn_callback(time_loop)
 	tornado.ioloop.IOLoop.current().start()

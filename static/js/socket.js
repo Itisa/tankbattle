@@ -37,6 +37,14 @@ so.onmessage = function (event) {
 
 	else if (msg.action=='move_all') {
 		p_all = msg.data[0]
+		for (var i = 0; i < p_all.length; i++) {
+			var pp = p_all[i]
+			console.log(pp,myuserid)
+			if (pp.userid==myuserid) {
+				myx = -pp.x+713;
+				myy = -pp.y+340;
+			}
+		}
 		// console.log(b_all[1][0])
 		b_all = msg.data[1]
 	}

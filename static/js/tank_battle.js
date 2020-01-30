@@ -10,6 +10,10 @@ var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20
 var bx = new Bullet(0,0,0,0,true)
 var p_all=[],b_all = [bx],w_all = []
 var text = [['hello','blue','hi','red',100]],talk=[];
+
+var canvasx = document.body.offsetWidth
+var canvasy = document.body.offsetHeight
+// console.log(canvasx,canvasy)
 //x,y,facing,jx,jy
 
 
@@ -68,7 +72,6 @@ function wait() {
 	document.getElementById('get_username').hidden = true;
 	document.getElementById('password').hidden = true;
 
-	adjustCanvas(canvas,c)
 	c.font = "30px bold 黑体";
 	c.fillText('Wait to begin',600,300);
 	c.stroke()
@@ -143,7 +146,9 @@ function draw_tank(pp) {
 	
 	//username
 	c.fillStyle="#000000";
-	c.fillText(myusername,100,10);
+	c.fillStyle = team
+	c.textAlign = "center";
+	c.fillText(pp.username,0,-50);
 
 	//lines
 	// console.log(lines)
@@ -496,30 +501,37 @@ function keyup(ev) {
 function getPixelRatio(context) {
 // 获取 canvas 的 backingStorePixelRatio 值
 var backingStore = context.backingStorePixelRatio ||
-    context.webkitBackingStorePixelRatio ||
-    context.mozBackingStorePixelRatio ||
-    context.msBackingStorePixelRatio ||
-    context.oBackingStorePixelRatio ||
-    context.backingStorePixelRatio || 1;
+	context.webkitBackingStorePixelRatio ||
+	context.mozBackingStorePixelRatio ||
+	context.msBackingStorePixelRatio ||
+	context.oBackingStorePixelRatio ||
+	context.backingStorePixelRatio || 1;
 // 若 devicePixelRatio 不存在，默认为 1
 return (window.devicePixelRatio || 1) / backingStore;
 }
 
 function adjustCanvas(canvas, context) {
-    var ratio = getPixelRatio(context);
-    // 获取 canvas 的原始大小
-    var oldWidth = canvas.width;
-    var oldHeight = canvas.height;
-    // 按照比例放大 canvas
-    console.log(oldHeight,oldWidth)
-    canvas.width = oldWidth * ratio;
-    canvas.height = oldHeight * ratio;
-    // 用 css 将 canvas 再调整成原来大小
-    canvas.style.width = oldWidth + 'px';
-    canvas.style.height = oldHeight + 'px';
-    // 按照比率把 context 再缩放回来
-    context.scale(ratio, ratio);
+	var ratio = getPixelRatio(context);
+	// 获取 canvas 的原始大小
+	var oldWidth = canvas.width;
+	var oldHeight = canvas.height;
+	// 按照比例放大 canvas
+	console.log(oldHeight,oldWidth)
+	canvas.width = oldWidth * ratio;
+	canvas.height = oldHeight * ratio;
+	// 用 css 将 canvas 再调整成原来大小
+	canvas.style.width = oldWidth + 'px';
+	canvas.style.height = oldHeight + 'px';
+	// 按照比率把 context 再缩放回来
+	context.scale(ratio, ratio);
 }
 
+function do_when_open() {
+	var canvas = document.getElementById('main');
+	var c = canvas.getContext("2d");
+	adjustCanvas(canvas,c)
+}
+
+do_when_open()
 // wait()
 // init()

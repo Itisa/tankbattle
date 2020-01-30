@@ -52,35 +52,35 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		######################### write connected
 
 ##############################################################################################################################
-		while 1:
-			self.userid = random.randint(1,100000)
-			if self.userid in a_onlineusers:
-				continue
-			break	
-		a_onlineusers.append(self.userid)
+		# while 1:
+		# 	self.userid = random.randint(1,100000)
+		# 	if self.userid in a_onlineusers:
+		# 		continue
+		# 	break	
+		# a_onlineusers.append(self.userid)
 
-		umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
-		self.write_message(umsg)
-		######################tell the userid
-
-		
-		nt = Tank(self.userid,self.team)
-		self.tank = nt
-		a_tanks.append(nt)
-		######################create a new Tank
-
+		# umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
+		# self.write_message(umsg)
+		# ######################tell the userid
 
 		
-		alldata = []
-		for i in a_tanks:
-			alldata.append(i.data)
-		omsg = self.pack('onlineuser',alldata)
-		self.write_message(omsg)
-		######################tell the online users
+		# nt = Tank(self.userid,self.team)
+		# self.tank = nt
+		# a_tanks.append(nt)
+		# ######################create a new Tank
 
-		mmsg = self.pack('map',ori_map)
-		self.write_message(mmsg)
-		######################down the map
+
+		
+		# alldata = []
+		# for i in a_tanks:
+		# 	alldata.append(i.data)
+		# omsg = self.pack('onlineuser',alldata)
+		# self.write_message(omsg)
+		# ######################tell the online users
+
+		# mmsg = self.pack('map',ori_map)
+		# self.write_message(mmsg)
+		# ######################down the map
 
 ##############################################################################################################################
 
@@ -96,47 +96,55 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		
 		if act == 'login':
 			for i in a_apps:
-				if i.username == data:
+				if i.username == data[0]:
 					umsg = self.pack('logerror','username has been used')
 					self.write_message(umsg)
 					return 
 			
 ##############################################################################################################################
-			# self.username = data
-			# while 1:
-			# 	self.userid = random.randint(1,100000)
-			# 	if self.userid in a_onlineusers:
-			# 		continue
-			# 	break	
-			# a_onlineusers.append(self.userid)
+			if log(data[0],data[1]):
+
+				self.username = data[0]
+			else:
+				umsg = self.pack('logerror','username or password is wrong')
+				self.write_message(umsg)
+				return
+			
+			while 1:
+				self.userid = random.randint(1,100000)
+				if self.userid in a_onlineusers:
+					continue
+				break
+			a_onlineusers.append(self.userid)
 			# print(a_onlineusers,a_tanks)
 			
-			# umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
-			# self.write_message(umsg)
-			# ######################tell the userid
+			umsg = self.pack('youruserid',{'userid':self.userid, 'username':self.username})
+			self.write_message(umsg)
+			######################tell the userid
 
 			
-			# nt = Tank(self.userid,self.team)
-			# self.tank = nt
-			# a_tanks.append(nt)
-			# ######################create a new Tank
+			nt = Tank(self.userid,self.username,self.team)
+			self.tank = nt
+			a_tanks.append(nt)
+			######################create a new Tank
 
 
 			
-			# alldata = []
-			# for i in a_tanks:
-			# 	alldata.append(i.data)
-			# omsg = self.pack('onlineuser',alldata)
-			# self.write_message(omsg)
-			# ######################tell the online users
+			alldata = []
+			for i in a_tanks:
+				alldata.append(i.data)
+			omsg = self.pack('onlineuser',alldata)
+			self.write_message(omsg)
+			######################tell the online users
 
-			# mmsg = self.pack('map',a_walls)
-			# self.write_message(mmsg)
-			# ######################down the map
+			mmsg = self.pack('map',ori_map)
+			self.write_message(mmsg)
+			######################down the map
 
 ##############################################################################################################################
-		index = a_onlineusers.index(self.userid)
-		nt = a_tanks[index]
+		if not self.userid == -1:
+			index = a_onlineusers.index(self.userid)
+			nt = a_tanks[index]
 		
 		if act == 'new_tank_come':
 			pass
@@ -211,8 +219,9 @@ def make_app():
 	)
 
 class Tank():
-	def __init__(self,userid,team):
+	def __init__(self,userid,username,team):
 		self.userid = userid
+		self.username = username
 		self.facing = 0
 		while True:
 			self.x = random.randint(1,1425*2)
@@ -238,6 +247,7 @@ class Tank():
 		self.data['facing'] = self.facing
 		self.data['userid'] = self.userid
 		self.data['team'] = self.team
+		self.data['username'] = self.username
 		# self.data['bu_cd'] = self.bu_cd
 		self.data['lines'] = self.lines
 		self.data['health'] = self.health
@@ -279,8 +289,9 @@ class Tank():
 				elif self.if_s:
 					self.x = self.x+10*self.sin
 					self.y = self.y-10*self.cos
+		self.lines = get_abc(self.x, self.y, self.facing,50,40)
 
-
+		if self.if_collide():
 			if not(self.if_a and self.if_d):
 				if self.if_d:
 					self.facing -= self.turnspeed
@@ -299,9 +310,17 @@ class Tank():
 		self.data['health'] = self.health
 		# print(self.data)
 
-	def health_change(self,h):
+	def health_change(self,h,fromtank):
 		self.health += h
 		if self.health == 0:
+			text = fromtank.username+' kills '+self.username
+			dictdown = {}
+			dictdown['text'] = text
+			dictdown['team'] = 'black'
+			dmsg = self.pack('talk_down',dictdown)
+			for i in a_apps:
+				i.write_message(dmsg)
+
 			self.health = 10
 			self.facing = 0
 			
@@ -387,7 +406,7 @@ class Bullet():
 			if_in = if_impact(self.lines, i.lines)
 			
 			if if_in:
-				i.health_change(-1)
+				i.health_change(-1,self.tank)
 				self.dead = True
 				a_bullets.pop(a_bullets.index(self))
 				return
@@ -570,6 +589,9 @@ def read_map(file='maps.txt'):
 			lines = get_abc(i[0],i[1],i[2],i[3],i[4])
 			a_walls.append(lines)
 		f.close()
+
+def log(username,password):
+	return True
 
 async def time_loop():
 	while True:

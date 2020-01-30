@@ -39,7 +39,7 @@ so.onmessage = function (event) {
 		p_all = msg.data[0]
 		for (var i = 0; i < p_all.length; i++) {
 			var pp = p_all[i]
-			console.log(pp,myuserid)
+			// console.log(pp,myuserid)
 			if (pp.userid==myuserid) {
 				myx = -pp.x+713;
 				myy = -pp.y+340;
@@ -174,7 +174,9 @@ so.onmessage = function (event) {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 function postdata(data) {
-	var t = JSON.stringify(data);
-	// console.log(t,'up')
-	so.send(t);
+	if (if_begin||data.action=='login') {
+		var t = JSON.stringify(data);
+		// console.log(t,'up')
+		so.send(t);
+	}
 }

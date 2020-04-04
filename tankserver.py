@@ -85,6 +85,8 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 ##############################################################################################################################
 
 	def on_message(self, message):
+		if not check_message():
+			return
 		# cobj.onmsg(message)
 		msg = json.loads(message)
 		# print(msg,'#'*20)
@@ -123,7 +125,7 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 			######################tell the userid
 
 			
-			nt = Tank(self.userid,self.username,self.team)
+			nt = Tank(self.userid,self.username,self.team,self)
 			self.tank = nt
 			a_tanks.append(nt)
 			######################create a new Tank
@@ -148,6 +150,10 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		
 		if act == 'new_tank_come':
 			pass
+		elif act == 'pause':
+			if self.username == 'pause':
+				global if_pause
+				if_pause = not if_pause
 		
 		elif act == 'keydown':
 			if data =='w':
@@ -174,14 +180,38 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 				nt.if_f = False
 		elif act == 'talk_up':
 			print('talk',data)
-			dictdown = {}
-			dictdown['text'] = data['text']
-			dictdown['username'] = self.username
-			dictdown['team'] = self.team
-			dmsg = self.pack('talk_down',dictdown)
-			for i in a_apps:
-				i.write_message(dmsg)
-		
+			text = data['text']
+			if len(text) == 0:
+				pass
+			elif text[0] == '/':
+				try:
+					if text[1] == 'tp':
+						self.tank.tp(text)
+					else:
+						dictdown = {}
+						dictdown['text'] = 'command not found'
+						dictdown['username'] = 'admin'
+						dmsg = self.pack('sys_talk_down',dictdown)
+						
+						self.write_message(dmsg)
+				except Exception as e:
+					dictdown = {}
+					dictdown['text'] = 'format error'
+					dictdown['username'] = 'admin'
+					dmsg = self.pack('sys_talk_down',dictdown)
+					
+					self.write_message(dmsg)
+
+
+			else:
+				dictdown = {}
+				dictdown['text'] = data['text']
+				dictdown['username'] = self.username
+				dictdown['team'] = self.team
+				dmsg = self.pack('talk_down',dictdown)
+				for i in a_apps:
+					i.write_message(dmsg)
+			
 
 	def on_close(self):
 		index = a_onlineusers.index(self.userid)
@@ -218,8 +248,12 @@ def make_app():
 		static_path=os.path.join(BASE_DIR, "static")
 	)
 
+def check_message():
+	return True
+
 class Tank():
-	def __init__(self,userid,username,team):
+	def __init__(self,userid,username,team,ws):
+		self.ws = ws
 		self.userid = userid
 		self.username = username
 		self.facing = 0
@@ -313,11 +347,14 @@ class Tank():
 	def health_change(self,h,fromtank):
 		self.health += h
 		if self.health == 0:
-			text = fromtank.username+' kills '+self.username
+			
 			dictdown = {}
-			dictdown['text'] = text
-			dictdown['team'] = 'black'
-			dmsg = self.pack('talk_down',dictdown)
+			dictdown['team1'] = fromtank.team
+			dictdown['name1'] = fromtank.username
+			dictdown['team2'] = self.team
+			dictdown['name2'] = self.username
+			dmsg = self.pack('destroy',dictdown)
+			print(dictdown)
 			for i in a_apps:
 				i.write_message(dmsg)
 
@@ -334,23 +371,64 @@ class Tank():
 		elif self.health > 10:
 			self.health = 10
 	
-	def if_collide(self):
+	def if_collide(self, lines = 1):
+		# lines = self.lines
+		if lines == 1:
+			lines = self.lines
 		for i in a_tanks:
 			if i == self:
 				continue
-			if_in = if_impact(self.lines,i.lines)
+			if_in = if_impact(lines,i.lines)
 			if if_in:
 				return True
 		
 		for i in a_walls:
-			if_in = if_impact(self.lines,i)
+			if_in = if_impact(lines,i)
 			if if_in:
 				return True
 
-		if if_out(self.lines):
+		if if_out(lines):
 			return True
 		
 		return False
+
+	def tp(self,text):
+		try:
+			i = 0
+			fi = 0
+			l = []
+	
+			x = int(text[2])
+			y = int(text[3])
+
+			if len(text) == 5:
+				facing = int(text[4])
+			else:
+				facing = self.facing
+			newlines = get_abc(x, y, facing,50,40)
+			if self.if_collide(newlines):
+				dictdown = {}
+				dictdown['text'] = 'teleport error:a collision happens'
+				dictdown['username'] = 'admin'
+				dmsg = self.pack('sys_talk_down',dictdown)
+				
+				self.ws.write_message(dmsg)
+			else:
+				self.x = x
+				self.y = y
+				if len(text) == 5:
+					self.facing = facing
+
+		except Exception as e:
+			print(e)
+			dictdown = {}
+			dictdown['text'] = 'teleport error:format error'
+			dictdown['username'] = 'admin'
+			dmsg = self.pack('sys_talk_down',dictdown)
+			
+			self.ws.write_message(dmsg)
+			
+
  
 	def pack(self,action,data):
 		dmsg = {}
@@ -375,6 +453,7 @@ class Bullet():
 		self.dead = False
 		self.stop = False
 		self.lines = get_abc(self.x, self.y, self.facing,30,5)
+		self.formerlines = []
 		self.data = {}
 		self.data['x'] = self.x
 		self.data['y'] = self.y
@@ -591,24 +670,34 @@ def read_map(file='maps.txt'):
 		f.close()
 
 def log(username,password):
-	return True
+	if username == 'pause':
+		if password == '1':
+			return True
+		else:
+			return False
+	elif username == 'admin':
+		return False
+	else:
+		return True
 
 async def time_loop():
 	while True:
 		nxt = tornado.gen.sleep(0.025)   # Start the clock.
-		await pertime()  # Run while the clock is ticking.
+		await pertime()   # Run while the clock is ticking.
 		await nxt
 
 async def pertime():
-	for i in a_bullets:
-		# print(i.data)
-		i.move()
-	for i in range(len(a_tanks)):
-			a_tanks[i].move()
-			a_apps[i].downmsg()
+	if not if_pause:
+		for i in a_bullets:
+			# print(i.data)
+			i.move()
+		for i in range(len(a_tanks)):
+				a_tanks[i].move()
+				a_apps[i].downmsg()
 
 
 if __name__ == "__main__":
+	if_pause = False
 	pie = 3.1415926535898
 	app = make_app()
 	a_apps = []

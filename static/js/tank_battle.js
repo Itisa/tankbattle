@@ -1,19 +1,21 @@
 var sett,f=0.25,size=1,speed=10,gt=0
 var jx=0,jy=0 //jia1 su4 du4
-var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_q=0,if_e=0,if_begin=false
+var if_w=0,if_s=0,if_a=0,if_d=0,if_f=0,if_q=0,if_e=0,if_begin=false,if_talk_show=false;
+var if_show_position = false
 var ifconnected = false
-var myx = 0,myy = 0
+var myx = 0,myy = 0,myfacing = 0
 //userid,username,x,y,facing,team
 // var p = new Tank(1,'321',200,100,130,'red')
 // var mt = new Tank(1,'321',200,300,330,'red')
 var map1 = [[1,50,200,200,20],[1,100,100,20,200],[1,600,50,200,20],[1,300,300,20,200],[1,450,200,20,200],[1,600,300,20,300],[1,700,200,100,20],[1,800,400,20,150],[1,950,300,300,20]]
 var bx = new Bullet(0,0,0,0,true)
 var p_all=[],b_all = [bx],w_all = []
-var text = [['hello','blue','hi','red',100]],talk=[];
-
+var text = [['hello','blue','hi','red',100]],talk=[['name1','name2','red','blue','-1']];
+var mytalk = []
 var canvasx = document.body.offsetWidth
 var canvasy = document.body.offsetHeight
-// console.log(canvasx,canvasy)
+var nowfocus = 0
+console.log(canvasx,canvasy)
 //x,y,facing,jx,jy
 
 
@@ -47,6 +49,11 @@ function postkey(method,key) {
 		var post = pack('keyup',key);
 		postdata(post);
 	}
+	else if (method=='pause') {
+		var post = pack('pause',key);
+		postdata(post);
+	}
+
 }
 
 
@@ -82,6 +89,22 @@ function wait() {
 	c.stroke()
 	// init()
 }
+
+function change_focus() {
+	if (nowfocus==0) {
+		document.getElementById('password').focus()
+		nowfocus = 1
+	}
+	else if (nowfocus==1) {
+		post_userinfo()
+		nowfocus = -1
+	}
+	else {
+		document.getElementById('get_username').focus()
+	}
+}
+
+
 
 function clean_board() {
 	var canvas = document.getElementById('main');
@@ -258,26 +281,55 @@ function draw_text() {
 	// 	c.fillText(tt[2],1350,200+20*i);
 	// 	// c.fillText(text[i][0],text[i][1],text[i][2]);
 	// }
+	// console.log(talk)
 	for (var i = 0; i < talk.length; i++) {
 		var t = talk[i]
+		// console.log(i)
 		// text,userid,team
-		draw_talk(1200,200+20*i,t[0],t[1],t[2])
-		t[3] -= 1
-		if (t[3]<=0) {talk.splice(i,1)}
+		// console.log(t)
+		draw_talk(1100,200+20*i,t)
+		t[t.length-1] -= 1
+		if (t[t.length-1]<=0) {talk.splice(i,1)}
 	}
-
 
 	
 }
 
-function draw_talk(x,y,text,username,team) {
-
+function draw_talk(x,y,t) {
+	
 	var can = document.getElementById('main');
 	var c = can.getContext("2d");
 	c.font = "20px bold 黑体";
-	c.fillStyle = team;
-	var t = username+':'+text
-	c.fillText(text,x,y)
+	c.textAlign = 'start'
+	if (t.length == 3) {
+		c.fillStyle = 'yellow';
+	
+		var text = t[0]
+		c.fillText(text,x,y)
+		
+	}
+
+	else if (t.length == 4) {
+		
+		//text, username, team
+		c.fillStyle = t[2];
+	
+		var text = t[1]+':'+t[0]
+		c.fillText(text,x,y)
+	}
+	else if (t.length == 5){
+		
+		l1 = t[0].length
+		c.font = "20px bold 黑体";
+		c.fillStyle = t[2];
+		c.fillText(t[0],x,y);
+		c.fillStyle = 'black';
+		c.fillText('destorys',x+15*l1,y);
+		c.fillStyle = t[3];
+		// console.log(c.fillStyle,t[3])
+		c.fillText(t[1],x+15*l1+80,y);
+	}
+	
 }
 
 function draw_line(m,n,o,colour='black') {
@@ -368,6 +420,19 @@ function draw_board(bo) {
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
+function draw_position() {
+	var can = document.getElementById('main');
+	var c = can.getContext("2d");
+	c.font = "20px bold 黑体";
+	c.fillStyle = 'black';
+	c.textAlign = 'start';
+	c.fillText('x:'+(-myx+713),10,30);
+	c.fillText('y:'+(-myy+340),10,60);
+	c.fillText('facing:'+myfacing,10,90);
+}
+
+
+
 function post_userinfo() {
 	username = document.getElementById('get_username').value
 	password = document.getElementById('password').value
@@ -375,10 +440,48 @@ function post_userinfo() {
 }
 
 function talk_post() {
+	if (!if_begin) {change_focus();return}
+	if (if_talk_show==true) {}
+	else {
+		if_talk_show=true;
+		var input = document.getElementById('talk')
+		input.hidden = false
+		input.focus()
+		return
+	}
 	var data = {}
 	var text = document.getElementById('talk').value
 	if (text==""){
-		return
+		
+	}
+	else if (text[0] == "/") {
+		var i = 0,fi = 0;
+		var uplist = ['/'];
+		var n = "";
+		var f = false;
+		while (i < text.length-1) {
+			i ++;
+			if (text[i] == " ") {
+				if (f==false) {uplist.push(n);f=true;n=""}
+
+			}
+			else {
+				if (f==true) {f = false}
+				n += text[i]
+			}
+		}
+		if (! n==""){uplist.push(n);}
+
+		if (uplist[1]=="show"){
+			if(uplist[2]=='position') {if_show_position==!if_show_position}
+		}
+		else{
+			data['text'] = uplist
+			data['username'] = myusername
+			onmsg = pack('talk_up',data)
+			postdata(onmsg)
+			document.getElementById('talk').value = ''
+		}
 	}
 	else {
 		data['text'] = text
@@ -387,6 +490,12 @@ function talk_post() {
 		postdata(onmsg)
 		document.getElementById('talk').value = ''
 	}
+	var can = document.getElementById('main')
+	can.focus()
+	var input = document.getElementById('talk')
+	input.hidden = true
+	console.log('in')
+	if_talk_show = false
 }
 function talk(ev) {
 	// body...
@@ -397,9 +506,11 @@ function talk(ev) {
 function time() {
 	clean_board()
 	// console.log(p_all)
-	draw_text()
+	
 	draw_map()
+	draw_text()
 
+	if (if_show_position==true) {draw_position();}
 
 	// console.log('in',b_all)
 	for (var i = b_all.length - 1; i >= 0; i--) {
@@ -418,6 +529,14 @@ function time() {
 
 function keydown(ev) {
 	var c = ev.keyCode;
+	if (if_talk_show) {
+		if (c==13) {talk_post()}
+		// else if (c==27) {//esc
+		// 	document.getElementById('talk').hidden = true
+		// 	if_talk_show == false
+		// }
+		return
+	}
 	// console.log(ev,c)
 	switch(c){
 	case 38:
@@ -455,6 +574,13 @@ function keydown(ev) {
 		break;
 	case 13://enter
 		talk_post()
+		break;
+	case 80://p
+		postkey('pause',p)
+		break;
+	case 191:// '/'
+		if (if_talk_show==false) {talk_post()}
+		
 		break;
 	}
 }
@@ -512,6 +638,8 @@ return (window.devicePixelRatio || 1) / backingStore;
 
 function adjustCanvas(canvas, context) {
 	var ratio = getPixelRatio(context);
+	var ratio = 2; 
+	console.log(ratio)
 	// 获取 canvas 的原始大小
 	var oldWidth = canvas.width;
 	var oldHeight = canvas.height;
@@ -530,6 +658,7 @@ function do_when_open() {
 	var canvas = document.getElementById('main');
 	var c = canvas.getContext("2d");
 	adjustCanvas(canvas,c)
+	document.getElementById('get_username').focus()
 }
 
 do_when_open()

@@ -1,6 +1,6 @@
-var url = 'ws://127.0.0.1:8888'
+// var url = 'ws://127.0.0.1:8888'
 
-// var url = 'ws://192.168.1.100:8888'
+var url = 'ws://192.168.0.100:8888'
 
 var so = new WebSocket(url);
 var mt;
@@ -19,6 +19,15 @@ so.onmessage = function (event) {
 	
 	else if (msg.action=="talk_down") {
 		talk.push([msg.data.text, msg.data.username, msg.data.team, 200])
+	}
+	
+	else if (msg.action=="destroy") {
+		talk.push([msg.data.name1, msg.data.name2, msg.data.team1, msg.data.team2, 200])
+	}
+
+	else if (msg.action=="sys_talk_down") {
+		
+		talk.push([msg.data.text, msg.data.username, 200])
 	}
 
 	else if (msg.action=='onlineuser'){

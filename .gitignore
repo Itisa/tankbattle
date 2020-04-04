@@ -1,0 +1,8 @@
+local_setting.py
+board.py
+tankcaogao.txt
+*.pyc
+__pycatch__/
+*.py[cod]
+*$py.class
+*.out

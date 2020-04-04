@@ -623,6 +623,15 @@ function keyup(ev) {
 	}
 }
 
+function resize(ev) {
+	var w = window.innerWidth;
+	var h = window.innerHeight;
+	var can = document.getElementById('main');
+	can.style.width = (w-20)+'px';
+	can.style.height = (h-20)+'px';
+	console.log(w,h)
+}
+
 
 function getPixelRatio(context) {
 // 获取 canvas 的 backingStorePixelRatio 值
@@ -660,6 +669,11 @@ function do_when_open() {
 	adjustCanvas(canvas,c)
 	document.getElementById('get_username').focus()
 }
+
+
+
+
+
 
 do_when_open()
 // wait()

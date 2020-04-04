@@ -82,7 +82,7 @@
 		padding: 6px;
 	}
 </style>
-<body onkeydown="keydown(event)" onkeyup="keyup(event)">
+<body onkeydown="keydown(event)" onkeyup="keyup(event)" onresize="resize(event)">
 <!-- <button onclick="wait()">begin</button> -->
 <input id="get_username" type="text" checked="true"></input>
 <input id="password" type="password"></input>
@@ -95,10 +95,15 @@
 <input type="text" id="talk" hidden="true"></input>
 <canvas id="main" width="1425" height="720"></canvas>
 
+<script type="text/javascript">
+	var socket_server = "{{socket_server}}";
+</script>
+
 <script type="text/javascript" src="../static/js/bullet.js"></script>
 <script type="text/javascript" src="../static/js/tank.js"></script>
 <script type="text/javascript" src="../static/js/tank_battle.js"></script>
 <script type="text/javascript" src="../static/js/socket.js"></script>
+
 
 </body>
 

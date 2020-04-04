@@ -9,13 +9,20 @@ import os
 import threading
 import time
 
+socket_server = ''
+try:
+	from loc_setting import socket_server
+except:
+	pass
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class MainHandler(tornado.web.RequestHandler):
 
 	def get(self):
 		items = []
-		self.render("tank_battle.html", title="My title", items=items)
+
+		self.render("tank_battle.html", title="My title", items=items,socket_server=socket_server)
 		# self.write('123456')
 		# return '1'
 	
@@ -187,6 +194,8 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 				try:
 					if text[1] == 'tp':
 						self.tank.tp(text)
+					elif text[1] == 'readmap':
+						self.readmap()
 					else:
 						dictdown = {}
 						dictdown['text'] = 'command not found'
@@ -220,6 +229,13 @@ class EchoWebSocket(tornado.websocket.WebSocketHandler):
 		h = a_apps.pop(index)
 		print('on_close',hi,hii.data)
 		print("WebSocket closed")
+
+	def readmap(self):
+		ori_map = []
+		nowmap = read_map()
+		for i in a_apps:
+			mmsg = self.pack('map',ori_map)
+			i.write_message(mmsg)
 
 	def pack(self,action,data):
 		dmsg = {}
@@ -550,7 +566,26 @@ def if_impact(line1,line2):
 	y23 = round(y23,3)
 	y24 = round(y24,3)
 	p2 = [(x21,y21),(x22,y22),(x23,y23),(x24,y24)]
+########################################################################
+	# def point_in_line(xy,line):
+	# 	x = xy[0]
+	# 	y = xy[1]
+	# 	a = line[0]
 
+	# all_p = []
+	# for i in line1:
+	# 	for i1 in line2:
+	# 		all_p.append(get_xy(i,i1))
+	
+	# for i in all_p:
+	# 	x = i[0]
+	# 	y = i[1]
+	# 	allx = []
+	# 	ally = []
+
+	# 	for i1 in line1:
+	# 		point_in_line(i,i1)
+########################################################################
 	for i in p1:
 		x = i[0]
 		y = i[1]
@@ -656,6 +691,7 @@ def get_kxy(x1,y1,x2,y2):
 
 def read_map(file='maps.txt'):
 	ifhave=os.path.exists('maps.txt')
+	nowmap = []
 	if not ifhave:
 		return False
 	with open('maps.txt','r') as f:
@@ -663,9 +699,11 @@ def read_map(file='maps.txt'):
 		walls = json.loads(j)
 		for i in walls:
 			ori_map.append(i)
+			nowmap.append(i)
 			if i[-1]==1:
 				continue
 			lines = get_abc(i[0],i[1],i[2],i[3],i[4])
+			# x, y, facing, l, w
 			a_walls.append(lines)
 		f.close()
 
